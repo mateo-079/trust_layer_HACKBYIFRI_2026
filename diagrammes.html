@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trust Layer — Diagrammes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,700;0,900;1,300&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --lavande:      #8B6FD4;
+    --lavande-light:#D4C5F9;
+    --lavande-deep: #5C3FB0;
+    --peche:        #FF9A6C;
+    --peche-light:  #FFD7BA;
+    --bleu:         #7FAEC7;
+    --bleu-light:   #C9D6DF;
+    --dark:         #1A2535;
+    --dark-mid:     #2C3E50;
+    --dark-soft:    #3D5166;
+    --cream:        #FAF8F4;
+    --cream-dark:   #F0EDE6;
+    --text-dark:    #1A2535;
+    --text-mid:     #4A5C6E;
+    --text-light:   #8A9BB0;
+    --green:        #4CAF50;
+    --green-light:  #C8E6C9;
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--dark);
+    color: var(--cream);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(26,37,53,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(139,111,212,0.2);
+    padding: 1rem 2rem;
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  }
+  .nav-logo {
+    font-family: 'Fraunces', serif;
+    font-weight: 700; font-size: 1.1rem;
+    color: var(--cream);
+    margin-right: auto;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .logo-dot {
+    width: 20px; height: 20px;
+    background: linear-gradient(135deg, var(--lavande), var(--peche));
+    border-radius: 5px;
+  }
+  .nav-link {
+    font-size: 0.82rem; font-weight: 500;
+    color: var(--text-light);
+    text-decoration: none;
+    padding: 0.4rem 0.9rem;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-link:hover, .nav-link.active {
+    color: var(--lavande-light);
+    border-color: rgba(139,111,212,0.4);
+    background: rgba(139,111,212,0.1);
+  }
+
+  /* LAYOUT */
+  .page { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+
+  .page-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 900;
+    color: var(--cream);
+    margin-bottom: 0.5rem;
+  }
+  .page-title em { font-style: italic; font-weight: 300; color: var(--lavande-light); }
+  .page-sub { color: var(--text-light); font-size: 1rem; margin-bottom: 4rem; }
+
+  /* SECTIONS */
+  .diagram-section {
+    margin-bottom: 5rem;
+    scroll-margin-top: 5rem;
+  }
+  .section-label {
+    display: inline-block;
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--peche);
+    margin-bottom: 0.6rem;
+  }
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.6rem; font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 0.4rem;
+  }
+  .section-desc {
+    color: var(--text-light);
+    font-size: 0.95rem;
+    margin-bottom: 1.8rem;
+    max-width: 600px;
+    line-height: 1.7;
+  }
+  .diagram-card {
+    background: var(--dark-mid);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    padding: 2rem;
+    overflow-x: auto;
+  }
+
+  /* =============================================
+     DIAGRAMME 1 — USE CASE
+     ============================================= */
+  .usecase-wrap {
+    display: flex;
+    gap: 3rem;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+    min-height: 400px;
+  }
+  .actor {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 0.5rem; min-width: 80px;
+  }
+  .actor-figure {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--lavande);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    box-shadow: 0 0 0 3px rgba(139,111,212,0.3);
+  }
+  .actor-line {
+    width: 2px; height: 40px; background: var(--lavande);
+  }
+  .actor-legs {
+    width: 30px; height: 20px;
+    border-left: 2px solid var(--lavande);
+    border-right: 2px solid var(--lavande);
+    transform: skewX(-5deg);
+  }
+  .actor-name {
+    font-size: 0.8rem; font-weight: 600;
+    color: var(--lavande-light);
+    text-align: center; margin-top: 6px;
+  }
+
+  .system-box {
+    flex: 1; min-width: 300px; max-width: 600px;
+    border: 2px solid rgba(139,111,212,0.4);
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: relative;
+  }
+  .system-box-label {
+    position: absolute; top: -12px; left: 16px;
+    background: var(--dark-mid);
+    padding: 0 10px;
+    font-size: 0.75rem; font-weight: 700;
+    color: var(--lavande);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .usecase-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+    margin-top: 0.5rem;
+  }
+  .uc-item {
+    background: rgba(139,111,212,0.1);
+    border: 1px solid rgba(139,111,212,0.25);
+    border-radius: 20px;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.82rem;
+    color: var(--cream);
+    text-align: center;
+    transition: all 0.2s;
+    cursor: default;
+  }
+  .uc-item:hover {
+    background: rgba(139,111,212,0.25);
+    border-color: var(--lavande);
+  }
+  .uc-item.peche {
+    background: rgba(255,154,108,0.1);
+    border-color: rgba(255,154,108,0.3);
+  }
+  .uc-item.peche:hover {
+    background: rgba(255,154,108,0.25);
+    border-color: var(--peche);
+  }
+  .uc-item.red {
+    background: rgba(229,57,53,0.1);
+    border-color: rgba(229,57,53,0.3);
+  }
+
+  /* =============================================
+     DIAGRAMME 2 — SÉQUENCE
+     ============================================= */
+  .seq-wrap { overflow-x: auto; }
+  .seq-diagram {
+    display: grid;
+    grid-template-columns: 110px 110px 110px 110px 130px;
+    gap: 0;
+    min-width: 580px;
+    position: relative;
+  }
+  .seq-actor {
+    text-align: center;
+    padding: 0.6rem 0.4rem;
+    font-size: 0.72rem; font-weight: 700;
+    color: var(--cream);
+    border-radius: 10px;
+    margin: 0 4px 0;
+  }
+  .seq-a1 { background: rgba(139,111,212,0.3); border: 1px solid var(--lavande); }
+  .seq-a2 { background: rgba(127,174,199,0.2); border: 1px solid var(--bleu); }
+  .seq-a3 { background: rgba(255,154,108,0.2); border: 1px solid var(--peche); }
+  .seq-a4 { background: rgba(76,175,80,0.2);   border: 1px solid var(--green); }
+  .seq-a5 { background: rgba(92,63,176,0.2);   border: 1px solid var(--lavande-deep); }
+
+  .seq-body {
+    grid-column: 1 / -1;
+    position: relative;
+    padding-top: 0.5rem;
+  }
+  .lifelines {
+    display: flex;
+    position: absolute; top: 0; bottom: 0; left: 0; right: 0;
+    pointer-events: none;
+  }
+  .lifeline {
+    flex: 1;
+    display: flex; justify-content: center;
+  }
+  .lifeline-line {
+    width: 2px;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.15) 0px,
+      rgba(255,255,255,0.15) 6px,
+      transparent 6px,
+      transparent 12px
+    );
+    height: 100%;
+  }
+
+  .seq-row {
+    display: grid;
+    grid-template-columns: 110px 110px 110px 110px 130px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    margin: 0 4px;
+    min-height: 40px;
+  }
+  .seq-row.group-label {
+    grid-column: 1 / -1;
+    padding: 0.8rem 0 0.2rem;
+    font-size: 0.7rem; font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    min-height: auto;
+  }
+  .seq-arrow {
+    position: relative;
+    height: 2px;
+    display: flex; align-items: center;
+  }
+  .seq-arrow.right { background: var(--lavande); }
+  .seq-arrow.right-bleu { background: var(--bleu); }
+  .seq-arrow.right-peche { background: var(--peche); }
+  .seq-arrow.right-green { background: var(--green); }
+  .seq-arrow.left {
+    background: rgba(139,111,212,0.4);
+    background: repeating-linear-gradient(
+      to right,
+      rgba(139,111,212,0.6) 0px, rgba(139,111,212,0.6) 6px,
+      transparent 6px, transparent 10px
+    );
+  }
+  .seq-arrow::after {
+    content: '';
+    position: absolute; right: -1px; top: -4px;
+    border-left: 8px solid var(--lavande);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+  }
+  .seq-arrow.left::after {
+    right: auto; left: -1px;
+    border-left: none;
+    border-right: 8px solid rgba(139,111,212,0.6);
+  }
+  .seq-arrow.right-bleu::after { border-left-color: var(--bleu); }
+  .seq-arrow.right-peche::after { border-left-color: var(--peche); }
+  .seq-arrow.right-green::after { border-left-color: var(--green); }
+
+  .seq-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-light);
+    padding: 0 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .seq-label.above {
+    position: absolute;
+    top: -16px; left: 4px;
+    color: var(--lavande-light);
+    font-size: 0.6rem;
+  }
+  .seq-action {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    padding-left: 8px;
+  }
+
+  /* =============================================
+     DIAGRAMME 3 — CLASSES / BDD
+     ============================================= */
+  .classes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+  }
+  .class-card {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .class-header {
+    padding: 0.7rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem; font-weight: 500;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .class-header.lavande { background: rgba(139,111,212,0.25); color: var(--lavande-light); }
+  .class-header.peche   { background: rgba(255,154,108,0.2);  color: var(--peche-light); }
+  .class-header.bleu    { background: rgba(127,174,199,0.2);  color: #C9D6DF; }
+  .class-header.green   { background: rgba(76,175,80,0.2);    color: var(--green-light); }
+  .class-pk {
+    font-size: 0.6rem; font-weight: 700;
+    background: rgba(255,255,255,0.1);
+    padding: 1px 6px; border-radius: 4px;
+    margin-left: auto;
+    color: var(--text-light);
+    letter-spacing: 0.05em;
+  }
+  .class-fields {
+    background: rgba(255,255,255,0.03);
+    padding: 0.7rem 0;
+  }
+  .class-field {
+    display: flex; justify-content: space-between;
+    padding: 0.3rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-light);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s;
+  }
+  .class-field:last-child { border-bottom: none; }
+  .class-field:hover { background: rgba(255,255,255,0.04); }
+  .class-field .type { color: var(--bleu-light); opacity: 0.8; }
+  .class-field .pk-mark { color: var(--peche); font-weight: 700; }
+  .class-field .fk-mark { color: var(--lavande-light); }
+
+  .relations {
+    margin-top: 1.5rem;
+    display: flex; flex-wrap: wrap; gap: 0.8rem;
+  }
+  .relation-chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-light);
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .rel-arrow { color: var(--lavande-light); }
+
+  /* =============================================
+     DIAGRAMME 4 — ARCHITECTURE
+     ============================================= */
+  .arch-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  .arch-layer {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .arch-layer-header {
+    padding: 0.5rem 1.2rem;
+    font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .arch-layer-header.client { background: rgba(139,111,212,0.2); color: var(--lavande-light); }
+  .arch-layer-header.proxy  { background: rgba(127,174,199,0.15); color: #C9D6DF; }
+  .arch-layer-header.app    { background: rgba(255,154,108,0.15); color: var(--peche-light); }
+  .arch-layer-header.data   { background: rgba(76,175,80,0.15);   color: var(--green-light); }
+
+  .arch-layer-body {
+    background: rgba(255,255,255,0.02);
+    padding: 1rem 1.2rem;
+    display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center;
+  }
+  .arch-block {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--cream);
+    display: flex; flex-direction: column; gap: 0.2rem;
+  }
+  .arch-block .block-label {
+    font-size: 0.62rem; color: var(--text-light);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .arch-block.highlight { border-color: var(--lavande); background: rgba(139,111,212,0.12); }
+  .arch-block.highlight-peche { border-color: var(--peche); background: rgba(255,154,108,0.1); }
+  .arch-block.highlight-green { border-color: var(--green); background: rgba(76,175,80,0.1); }
+
+  .arch-connector {
+    text-align: center;
+    padding: 0.2rem 0;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    font-size: 0.72rem; color: var(--text-light);
+  }
+  .arch-connector-line {
+    flex: 1; max-width: 120px; height: 1px;
+    background: repeating-linear-gradient(
+      to right,
+      rgba(255,255,255,0.2) 0px, rgba(255,255,255,0.2) 4px,
+      transparent 4px, transparent 8px
+    );
+  }
+  .arch-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(139,111,212,0.15);
+    color: var(--lavande-light);
+    border: 1px solid rgba(139,111,212,0.3);
+  }
+  .arch-tag.ws {
+    background: rgba(255,154,108,0.15);
+    color: var(--peche-light);
+    border-color: rgba(255,154,108,0.3);
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><div class="logo-dot"></div> Trust Layer — Diagrammes</div>
+  <a class="nav-link" href="#usecase">Cas d'utilisation</a>
+  <a class="nav-link" href="#sequence">Séquence</a>
+  <a class="nav-link" href="#classes">Modèle de données</a>
+  <a class="nav-link" href="#architecture">Architecture</a>
+</nav>
+
+<div class="page">
+  <h1 class="page-title">Diagrammes <em>Trust Layer</em></h1>
+  <p class="page-sub">Vue technique complète du projet — Student Compass Team · Bénin 2026</p>
+
+  <!-- ============================================================
+       DIAGRAMME 1 — CAS D'UTILISATION
+       ============================================================ -->
+  <section class="diagram-section" id="usecase">
+    <span class="section-label">Diagramme 1</span>
+    <h2 class="section-title">Cas d'utilisation</h2>
+    <p class="section-desc">Les actions que chaque type d'acteur peut effectuer dans le système.</p>
+    <div class="diagram-card">
+      <div class="usecase-wrap">
+
+        <!-- Acteur : Étudiant -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2rem;">
+          <div class="actor">
+            <div class="actor-figure">🎓</div>
+            <div class="actor-line"></div>
+            <div class="actor-legs"></div>
+            <div class="actor-name">Étudiant</div>
+          </div>
+          <div class="actor">
+            <div class="actor-figure" style="background:var(--bleu)">👁️</div>
+            <div class="actor-line" style="background:var(--bleu)"></div>
+            <div class="actor-legs" style="border-color:var(--bleu)"></div>
+            <div class="actor-name" style="color:#C9D6DF">Visiteur</div>
+          </div>
+        </div>
+
+        <!-- Système -->
+        <div class="system-box">
+          <span class="system-box-label">Système Trust Layer</span>
+          <div class="usecase-grid">
+            <div class="uc-item">S'inscrire</div>
+            <div class="uc-item">Se connecter</div>
+            <div class="uc-item">Envoyer un message</div>
+            <div class="uc-item">Lire les messages</div>
+            <div class="uc-item">Noter son humeur</div>
+            <div class="uc-item">Voir l'historique</div>
+            <div class="uc-item">Accéder aux ressources</div>
+            <div class="uc-item">Signaler un message</div>
+            <div class="uc-item peche">Réagir (💜)</div>
+            <div class="uc-item peche">Voir politique confidentialité</div>
+            <div class="uc-item red" style="grid-column:1/-1">Déclencher alerte de crise</div>
+          </div>
+        </div>
+
+        <!-- Acteur : Modérateur -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2rem;">
+          <div class="actor">
+            <div class="actor-figure" style="background:var(--peche)">🛡️</div>
+            <div class="actor-line" style="background:var(--peche)"></div>
+            <div class="actor-legs" style="border-color:var(--peche)"></div>
+            <div class="actor-name" style="color:var(--peche-light)">Modérateur</div>
+          </div>
+          <div class="actor">
+            <div class="actor-figure" style="background:#4CAF50">⚙️</div>
+            <div class="actor-line" style="background:#4CAF50"></div>
+            <div class="actor-legs" style="border-color:#4CAF50"></div>
+            <div class="actor-name" style="color:#C8E6C9">Système</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DIAGRAMME 2 — SÉQUENCE
+       ============================================================ -->
+  <section class="diagram-section" id="sequence">
+    <span class="section-label">Diagramme 2</span>
+    <h2 class="section-title">Séquence — Envoi d'un message</h2>
+    <p class="section-desc">Flux complet depuis la saisie jusqu'à l'affichage chez tous les utilisateurs connectés.</p>
+    <div class="diagram-card">
+      <div class="seq-wrap">
+        <div class="seq-diagram">
+          <!-- En-têtes acteurs -->
+          <div class="seq-actor seq-a1">Navigateur<br>Étudiant</div>
+          <div class="seq-actor seq-a2">security.js<br>chat.js</div>
+          <div class="seq-actor seq-a3">API REST<br>Express</div>
+          <div class="seq-actor seq-a4">MySQL</div>
+          <div class="seq-actor seq-a5">WebSocket<br>Autres clients</div>
+
+          <!-- Corps -->
+          <div class="seq-body">
+            <div class="lifelines">
+              <div class="lifeline"><div class="lifeline-line"></div></div>
+              <div class="lifeline"><div class="lifeline-line"></div></div>
+              <div class="lifeline"><div class="lifeline-line"></div></div>
+              <div class="lifeline"><div class="lifeline-line"></div></div>
+              <div class="lifeline"><div class="lifeline-line"></div></div>
+            </div>
+
+            <div class="seq-row group-label">Validation locale</div>
+
+            <div class="seq-row">
+              <div></div>
+              <div class="seq-arrow right" style="grid-column:1/3; position:relative;">
+                <span class="seq-label above">rateLimiter.check() + sanitizeMessage()</span>
+              </div>
+              <div></div><div></div><div></div>
+            </div>
+
+            <div class="seq-row">
+              <div></div>
+              <div class="seq-arrow right" style="grid-column:1/3; position:relative;">
+                <span class="seq-label above">Détection mots-clés crise</span>
+              </div>
+              <div></div><div></div><div></div>
+            </div>
+
+            <div class="seq-row group-label">Envoi à l'API</div>
+
+            <div class="seq-row">
+              <div></div><div></div>
+              <div class="seq-arrow right-bleu" style="grid-column:1/4; position:relative;">
+                <span class="seq-label above">POST /api/messages {user_id, content}</span>
+              </div>
+              <div></div><div></div>
+            </div>
+
+            <div class="seq-row group-label">Traitement serveur</div>
+
+            <div class="seq-row">
+              <div></div><div></div><div></div>
+              <div class="seq-arrow right-green" style="grid-column:3/5; position:relative;">
+                <span class="seq-label above">INSERT INTO messages</span>
+              </div>
+              <div></div>
+            </div>
+
+            <div class="seq-row">
+              <div></div><div></div><div></div>
+              <div class="seq-arrow left" style="grid-column:3/5; position:relative; transform:scaleX(-1)">
+              </div>
+              <div></div>
+            </div>
+
+            <div class="seq-row group-label">Diffusion temps réel</div>
+
+            <div class="seq-row">
+              <div></div><div></div><div></div><div></div>
+              <div class="seq-arrow right-peche" style="grid-column:3/6; position:relative;">
+                <span class="seq-label above">socket.emit('new_message')</span>
+              </div>
+            </div>
+
+            <div class="seq-row group-label">Retour au client</div>
+
+            <div class="seq-row">
+              <div class="seq-arrow left" style="grid-column:1/4; position:relative; transform:scaleX(-1)">
+              </div>
+              <div></div><div></div><div></div><div></div>
+            </div>
+
+            <div class="seq-row" style="min-height:30px">
+              <div style="font-size:0.7rem; color:var(--lavande-light); padding-left:8px;">appendMessage() → DOM</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DIAGRAMME 3 — MODÈLE DE DONNÉES
+       ============================================================ -->
+  <section class="diagram-section" id="classes">
+    <span class="section-label">Diagramme 3</span>
+    <h2 class="section-title">Modèle de données</h2>
+    <p class="section-desc">Structure des tables MySQL et leurs relations.</p>
+    <div class="diagram-card">
+      <div class="classes-grid">
+
+        <div class="class-card">
+          <div class="class-header lavande">users <span class="class-pk">TABLE</span></div>
+          <div class="class-fields">
+            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">INT AUTO_INCREMENT</span></div>
+            <div class="class-field"><span>avatar</span><span class="type">VARCHAR(10)</span></div>
+            <div class="class-field"><span>pseudo</span><span class="type">VARCHAR(20)</span></div>
+            <div class="class-field"><span>first_name</span><span class="type">VARCHAR(40)</span></div>
+            <div class="class-field"><span>last_name</span><span class="type">VARCHAR(40)</span></div>
+            <div class="class-field"><span>email</span><span class="type">VARCHAR UNIQUE</span></div>
+            <div class="class-field"><span>password_hash</span><span class="type">TEXT</span></div>
+            <div class="class-field"><span>emergency_name</span><span class="type">VARCHAR(40)</span></div>
+            <div class="class-field"><span>emergency_phone</span><span class="type">VARCHAR(20)</span></div>
+            <div class="class-field"><span>created_at</span><span class="type">TIMESTAMP</span></div>
+          </div>
+        </div>
+
+        <div class="class-card">
+          <div class="class-header peche">messages <span class="class-pk">TABLE</span></div>
+          <div class="class-fields">
+            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">INT AUTO_INCREMENT</span></div>
+            <div class="class-field"><span><span class="fk-mark">FK</span> user_id</span><span class="type">INT</span></div>
+            <div class="class-field"><span>salon_id</span><span class="type">INT</span></div>
+            <div class="class-field"><span>content</span><span class="type">TEXT</span></div>
+            <div class="class-field"><span>created_at</span><span class="type">TIMESTAMP</span></div>
+            <div class="class-field"><span>deleted_at</span><span class="type">TIMESTAMP NULL</span></div>
+          </div>
+        </div>
+
+        <div class="class-card">
+          <div class="class-header bleu">moods <span class="class-pk">TABLE</span></div>
+          <div class="class-fields">
+            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">INT AUTO_INCREMENT</span></div>
+            <div class="class-field"><span><span class="fk-mark">FK</span> user_id</span><span class="type">INT</span></div>
+            <div class="class-field"><span>score</span><span class="type">SMALLINT (1-10)</span></div>
+            <div class="class-field"><span>created_at</span><span class="type">TIMESTAMP</span></div>
+          </div>
+        </div>
+
+        <div class="class-card">
+          <div class="class-header green">reports <span class="class-pk">TABLE</span></div>
+          <div class="class-fields">
+            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">INT AUTO_INCREMENT</span></div>
+            <div class="class-field"><span><span class="fk-mark">FK</span> reporter_id</span><span class="type">INT</span></div>
+            <div class="class-field"><span><span class="fk-mark">FK</span> message_id</span><span class="type">INT</span></div>
+            <div class="class-field"><span>reason</span><span class="type">TEXT</span></div>
+            <div class="class-field"><span>status</span><span class="type">ENUM</span></div>
+            <div class="class-field"><span>created_at</span><span class="type">TIMESTAMP</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="relations">
+        <div class="relation-chip">users <span class="rel-arrow">──1:N──</span> messages</div>
+        <div class="relation-chip">users <span class="rel-arrow">──1:N──</span> moods</div>
+        <div class="relation-chip">users <span class="rel-arrow">──1:N──</span> reports (reporter)</div>
+        <div class="relation-chip">messages <span class="rel-arrow">──1:N──</span> reports</div>
+        <div class="relation-chip">messages.deleted_at NULL <span class="rel-arrow">→</span> soft delete (modération)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DIAGRAMME 4 — ARCHITECTURE
+       ============================================================ -->
+  <section class="diagram-section" id="architecture">
+    <span class="section-label">Diagramme 4</span>
+    <h2 class="section-title">Architecture des composants</h2>
+    <p class="section-desc">Vue d'ensemble des couches techniques et de leurs interactions.</p>
+    <div class="diagram-card">
+      <div class="arch-wrap">
+
+        <!-- Couche Client -->
+        <div class="arch-layer">
+          <div class="arch-layer-header client">Client — Navigateur</div>
+          <div class="arch-layer-body">
+            <div class="arch-block highlight">
+              <span class="block-label">Pages HTML</span>
+              index · connexion · chat · politique
+            </div>
+            <div class="arch-block highlight">
+              <span class="block-label">CSS</span>
+              landing · connexion · chat · politique
+            </div>
+            <div class="arch-block highlight">
+              <span class="block-label">JavaScript</span>
+              security.js · landing.js · connexion.js · chat.js
+            </div>
+            <div class="arch-block">
+              <span class="block-label">Stockage local</span>
+              sessionStorage (session) · localStorage (humeurs)
+            </div>
+          </div>
+        </div>
+
+        <div class="arch-connector">
+          <div class="arch-connector-line"></div>
+          <span class="arch-tag">HTTPS</span>
+          <span class="arch-tag ws">WebSocket (ws://)</span>
+          <div class="arch-connector-line"></div>
+        </div>
+
+        <!-- Couche Proxy -->
+        <div class="arch-layer">
+          <div class="arch-layer-header proxy">Serveur Web — nginx</div>
+          <div class="arch-layer-body">
+            <div class="arch-block">
+              <span class="block-label">Fichiers statiques</span>
+              /frontend/* → servi directement
+            </div>
+            <div class="arch-block">
+              <span class="block-label">Proxy inverse</span>
+              /api/* → backend:3000
+            </div>
+            <div class="arch-block">
+              <span class="block-label">Sécurité</span>
+              SSL/TLS · Headers HTTP · Rate limit IP
+            </div>
+          </div>
+        </div>
+
+        <div class="arch-connector">
+          <div class="arch-connector-line"></div>
+          <span class="arch-tag">HTTP local</span>
+          <div class="arch-connector-line"></div>
+        </div>
+
+        <!-- Couche Application -->
+        <div class="arch-layer">
+          <div class="arch-layer-header app">Backend — Node.js + Express</div>
+          <div class="arch-layer-body">
+            <div class="arch-block highlight-peche">
+              <span class="block-label">Routes API</span>
+              auth · users · messages · moods · reports
+            </div>
+            <div class="arch-block highlight-peche">
+              <span class="block-label">Middlewares</span>
+              authMiddleware · rateLimiter · sanitizer
+            </div>
+            <div class="arch-block highlight-peche">
+              <span class="block-label">WebSocket</span>
+              chatSocket.js — diffusion temps réel
+            </div>
+            <div class="arch-block">
+              <span class="block-label">Auth</span>
+              JWT · bcrypt
+            </div>
+          </div>
+        </div>
+
+        <div class="arch-connector">
+          <div class="arch-connector-line"></div>
+          <span class="arch-tag">mysql2</span>
+          <span class="arch-tag ws">ioredis</span>
+          <div class="arch-connector-line"></div>
+        </div>
+
+        <!-- Couche Données -->
+        <div class="arch-layer">
+          <div class="arch-layer-header data">Données</div>
+          <div class="arch-layer-body">
+            <div class="arch-block highlight-green">
+              <span class="block-label">MySQL</span>
+              users · messages · moods · reports
+            </div>
+            <div class="arch-block highlight-green">
+              <span class="block-label">Redis</span>
+              sessions actives · rate limiting · compteur en ligne
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // Mise en surbrillance du lien de navigation actif au scroll
+  const sections = document.querySelectorAll('.diagram-section');
+  const links    = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.4 });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

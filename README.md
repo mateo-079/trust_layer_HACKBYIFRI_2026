@@ -136,7 +136,7 @@ Si `tl_user_id` est absent au chargement de `chat.html`, l'utilisateur est redir
 - **Frontend :** HTML5 / CSS3 / JavaScript vanilla (ES2022+)
 - **Typographie :** Fraunces (titres) + DM Sans (corps) via Google Fonts
 - **Backend prévu :** Node.js + Express ou Python + FastAPI
-- **Base de données prévue :** PostgreSQL + Redis
+- **Base de données prévue :** MySQL + Redis
 - **Temps réel :** WebSocket (Socket.io ou natif)
 - **Authentification :** JWT avec expiration
 
