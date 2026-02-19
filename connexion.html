@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trust Layer — Crée ton identité</title>
+
+    <!-- En-têtes de sécurité — à dupliquer dans la configuration serveur en production -->
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self';
+                   script-src 'self' 'unsafe-inline';
+                   style-src  'self' 'unsafe-inline' https://fonts.googleapis.com;
+                   font-src   'self' https://fonts.gstatic.com;
+                   img-src    'self' data:;
+                   connect-src 'self';
+                   frame-ancestors 'none';">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="no-referrer">
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,900;1,300;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/connexion.css">
+</head>
+<body>
+
+    <!-- Fond animé décoratif -->
+    <div class="bg-layer">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <a href="index.html" class="back-link">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M14 10H6M6 10L10 6M6 10L10 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Retour
+    </a>
+
+    <main class="main">
+
+        <!-- Colonne gauche — présentation du fonctionnement de l'anonymat -->
+        <aside class="info-col">
+            <div class="info-logo">
+                <div class="logo-mark"></div>
+                <span>Trust Layer</span>
+            </div>
+
+            <div class="info-content">
+                <h1>Ton identité,<br><em>ton choix</em></h1>
+                <p>Dans le chat, tu restes sous pseudo et avatar. Tes informations restent privées et servent uniquement à te protéger en cas d'urgence.</p>
+
+                <ul class="info-list">
+                    <li>
+                        <div class="info-icon">🔒</div>
+                        <div>
+                            <strong>Profil privé</strong>
+                            <span>Tes infos ne sont jamais visibles dans le chat</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="info-icon">🎭</div>
+                        <div>
+                            <strong>Tu choisis qui tu es ici</strong>
+                            <span>Pseudo + avatar, modifiable à tout moment</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="info-icon">💨</div>
+                        <div>
+                            <strong>Contact d'urgence</strong>
+                            <span>Utile si une situation devient critique</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Colonne droite — formulaire principal -->
+        <section class="form-col">
+
+            <!-- Onglets Inscription / Connexion — switchAuth() dans connexion.js gère le basculement -->
+            <div class="auth-switch">
+                <button class="switch-btn active" data-panel="register" onclick="switchAuth('register')">Inscription</button>
+                <button class="switch-btn"        data-panel="login"    onclick="switchAuth('login')">Connexion</button>
+            </div>
+
+            <!-- Panneau d'inscription en 3 étapes -->
+            <div class="auth-panel active" id="panel-register">
+            <div class="form-card">
+
+                <!-- Indicateur de progression entre les 3 étapes -->
+                <div class="form-steps">
+                    <div class="step active" data-step="1">
+                        <div class="step-num">1</div>
+                        <span>Avatar</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step" data-step="2">
+                        <div class="step-num">2</div>
+                        <span>Profil</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step" data-step="3">
+                        <div class="step-num">3</div>
+                        <span>C'est parti !</span>
+                    </div>
+                </div>
+
+                <!-- Étape 1 — Sélection de l'avatar
+                     La grille est générée dynamiquement par buildAvatarGrid() dans connexion.js.
+                     Le bouton "Continuer" est désactivé tant qu'aucun avatar n'est choisi. -->
+                <div class="step-content active" id="step-1">
+                    <h2>Choisis ton avatar</h2>
+                    <p class="step-desc">Il représentera ton identité anonyme dans le chat.</p>
+
+                    <div class="avatar-grid" id="avatar-grid">
+                        <!-- Généré par connexion.js — buildAvatarGrid() -->
+                    </div>
+
+                    <button class="btn-next" id="next-to-2" disabled onclick="goToStep(2)">
+                        Continuer
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <path d="M5 9H13M13 9L10 6M13 9L10 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Étape 2 — Pseudo et informations de profil
+                     Les informations réelles (nom, email, contact d'urgence) sont stockées
+                     côté serveur et ne sont jamais affichées dans le chat.
+                     Le bouton "Continuer" est activé par updateStep2Buttons() quand pseudo
+                     et profil sont tous deux valides. -->
+                <div class="step-content" id="step-2">
+                    <h2>Choisis ton pseudo</h2>
+                    <p class="step-desc">Entre 3 et 20 caractères. Choisis quelque chose qui te parle, puis complète ton profil.</p>
+
+                    <div class="pseudo-wrap">
+                        <!-- Prévisualisation du pseudo en temps réel -->
+                        <div class="pseudo-preview" id="pseudo-preview">
+                            <div class="pseudo-avatar" id="preview-av">🌟</div>
+                            <div class="pseudo-name"   id="preview-name">Ton pseudo...</div>
+                        </div>
+
+                        <div class="input-group">
+                            <input
+                                type="text"
+                                id="pseudo-input"
+                                placeholder="Ex : ÉtoileDuSoir, LuneCalme..."
+                                maxlength="20"
+                                autocomplete="off"
+                            >
+                            <button class="random-btn" id="random-btn" title="Générer un pseudo aléatoire">
+                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                    <path d="M3 9C3 5.7 5.7 3 9 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M15 9C15 12.3 12.3 15 9 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M9 1L9 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M7 3L9 1L11 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Aléatoire
+                            </button>
+                        </div>
+                        <div class="input-hint" id="input-hint">Entre 3 et 20 caractères</div>
+                    </div>
+
+                    <!-- Champs du profil privé — envoyés au backend à l'inscription,
+                         jamais exposés dans le chat ou à d'autres utilisateurs -->
+                    <div class="form-grid">
+                        <label class="field">
+                            <span>Nom</span>
+                            <input type="text" id="last-name" autocomplete="family-name" placeholder="Ex : Koffi" required>
+                        </label>
+                        <label class="field">
+                            <span>Prénoms</span>
+                            <input type="text" id="first-name" autocomplete="given-name" placeholder="Ex : Aïcha" required>
+                        </label>
+                        <label class="field full">
+                            <span>Email</span>
+                            <input type="email" id="email-input" autocomplete="email" placeholder="nom@exemple.com" required>
+                        </label>
+                        <label class="field full">
+                            <span>Contact d'urgence — Nom</span>
+                            <input type="text" id="emergency-name" autocomplete="name" placeholder="Nom complet" required>
+                        </label>
+                        <label class="field full">
+                            <span>Contact d'urgence — Numéro</span>
+                            <input type="tel" id="emergency-phone" autocomplete="tel" placeholder="+229 xx xx xx xx" required>
+                        </label>
+                        <label class="field full">
+                            <span>Mot de passe</span>
+                            <input type="password" id="password-input" autocomplete="new-password" minlength="6" placeholder="Minimum 6 caractères" required>
+                        </label>
+                    </div>
+
+                    <div class="input-hint" id="profile-hint">Tous les champs sont obligatoires.</div>
+
+                    <div class="trust-note">
+                        Tes données restent privées. Elles servent uniquement en cas de situation grave
+                        pour te protéger et pouvoir te contacter.
+                    </div>
+
+                    <label class="check">
+                        <input type="checkbox" id="terms-check">
+                        <span>J'accepte les <a href="#rules">règles d'utilisation</a> et la <a href="#privacy">confidentialité</a>.</span>
+                    </label>
+
+                    <div class="step-btns">
+                        <button class="btn-back" onclick="goToStep(1)">Retour</button>
+                        <button class="btn-next" id="next-to-3" disabled onclick="goToStep(3)">
+                            Continuer
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                <path d="M5 9H13M13 9L10 6M13 9L10 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Étape 3 — Récapitulatif et validation finale
+                     Les champs de confirmation sont remplis par goToStep(3) dans connexion.js.
+                     Le bouton "Accéder" déclenche submitProfile() qui appelle POST /api/register. -->
+                <div class="step-content" id="step-3">
+                    <div class="confirm-wrap">
+                        <div class="confirm-avatar" id="confirm-avatar">🌟</div>
+                        <div class="confirm-wave">
+                            <div class="wave"></div>
+                            <div class="wave wave-2"></div>
+                        </div>
+                    </div>
+
+                    <h2>Bienvenue, <span id="confirm-pseudo" class="highlight">ami(e)</span> !</h2>
+                    <p class="step-desc">
+                        Ton identité anonyme est prête. Tu peux rejoindre la communauté et commencer à échanger avec d'autres étudiant(e)s.
+                    </p>
+
+                    <!-- Récapitulatif des informations saisies — lecture seule -->
+                    <div class="confirm-details">
+                        <div class="confirm-item">
+                            <span class="conf-label">Avatar</span>
+                            <span id="conf-av-display">—</span>
+                        </div>
+                        <div class="confirm-item">
+                            <span class="conf-label">Pseudo</span>
+                            <span id="conf-pseudo-display" class="conf-value">—</span>
+                        </div>
+                        <div class="confirm-item">
+                            <span class="conf-label">Nom complet</span>
+                            <span id="conf-fullname" class="conf-value">—</span>
+                        </div>
+                        <div class="confirm-item">
+                            <span class="conf-label">Email</span>
+                            <span id="conf-email" class="conf-value">—</span>
+                        </div>
+                        <div class="confirm-item">
+                            <span class="conf-label">Contact d'urgence</span>
+                            <span id="conf-emergency" class="conf-value">—</span>
+                        </div>
+                        <div class="confirm-item">
+                            <span class="conf-label">Statut</span>
+                            <span class="conf-status">Anonyme et protégé</span>
+                        </div>
+                    </div>
+
+                    <div class="step-btns">
+                        <button class="btn-back" onclick="goToStep(2)">Modifier</button>
+                        <!-- submitProfile() dans connexion.js envoie le payload à POST /api/register -->
+                        <button type="button" class="btn-enter" id="btn-enter">
+                            Accéder à mon espace
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                <path d="M5 9H13M13 9L10 6M13 9L10 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <!-- Zone d'affichage des erreurs retournées par le serveur -->
+                    <div class="input-hint" id="server-hint"></div>
+                </div>
+
+            </div>
+            </div>
+
+            <!-- Panneau de connexion pour les utilisateurs existants.
+                 submitLogin() dans connexion.js envoie les identifiants à POST /api/login. -->
+            <div class="auth-panel" id="panel-login">
+                <div class="form-card login-card">
+                    <h2>Connexion</h2>
+                    <p class="step-desc">Déjà un compte ? Connecte-toi pour accéder à ton espace.</p>
+                    <div class="form-grid">
+                        <label class="field full">
+                            <span>Email</span>
+                            <input type="email" id="login-email" autocomplete="email" placeholder="nom@exemple.com" required>
+                        </label>
+                        <label class="field full">
+                            <span>Mot de passe</span>
+                            <input type="password" id="login-password" autocomplete="current-password" required>
+                        </label>
+                    </div>
+                    <div class="step-btns">
+                        <button type="button" class="btn-enter" id="btn-login">Se connecter</button>
+                    </div>
+                    <div class="input-hint" id="login-hint"></div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Section résumé des règles — affichée en bas de page, liée depuis le checkbox -->
+    <section class="terms-section" id="rules">
+        <h3>Règles d'utilisation et Confidentialité</h3>
+        <p style="text-align: center; margin-bottom: 1.5rem;">
+            En t'inscrivant, tu acceptes nos règles d'utilisation et notre politique de confidentialité.
+        </p>
+        <div style="text-align: center;">
+            <a href="politique.html" target="_blank" style="display: inline-block; padding: 0.8rem 2rem; background: var(--lavande); color: white; border-radius: var(--radius-full); font-weight: 600; text-decoration: none; transition: all 0.2s;">
+                Lire les politiques complètes
+            </a>
+        </div>
+        <ul style="margin-top: 2rem;">
+            <li><strong>Anonymat dans le chat :</strong> Seul ton pseudo et avatar sont visibles.</li>
+            <li><strong>Données protégées :</strong> Ton nom, email et contact d'urgence restent strictement privés.</li>
+            <li><strong>Utilisation responsable :</strong> Aucun contenu violent, harcelant ou illégal.</li>
+            <li><strong>Contact d'urgence :</strong> Utilisé uniquement si ta sécurité est en danger.</li>
+        </ul>
+    </section>
+
+    <!-- security.js chargé en premier pour que ses utilitaires soient disponibles dans connexion.js -->
+    <script src="js/security.js"></script>
+    <script src="js/connexion.js"></script>
+</body>
+</html>

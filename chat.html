@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trust Layer — Espace de Parole</title>
+
+    <!-- En-têtes de sécurité HTTP déclarés côté HTML comme couche supplémentaire.
+         La configuration définitive doit être faite côté serveur (nginx/Apache).
+         connect-src autorise localhost pour le développement WebSocket — à restreindre en production. -->
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self';
+                   script-src 'self' 'unsafe-inline';
+                   style-src  'self' 'unsafe-inline' https://fonts.googleapis.com;
+                   font-src   'self' https://fonts.gstatic.com;
+                   img-src    'self' data:;
+                   connect-src 'self' ws://localhost:* wss:;
+                   frame-ancestors 'none';">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="no-referrer">
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,900;1,300;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/chat.css">
+</head>
+<body>
+
+<!-- ============================================================
+     SIDEBAR
+     Contient : logo, carte utilisateur, slider bien-être,
+     navigation des salons, accès aux ressources, lien de sortie.
+     Sur mobile, la sidebar est masquée et s'ouvre via toggleSidebar().
+     ============================================================ -->
+<aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-header">
+        <div class="logo-wrap">
+            <div class="logo-mark"></div>
+            <span class="logo-text">Trust Layer</span>
+        </div>
+        <button class="sidebar-close" id="sidebar-close" onclick="toggleSidebar()">✕</button>
+    </div>
+
+    <!-- Carte utilisateur — avatar et pseudo chargés depuis le backend via chat.js -->
+    <div class="user-card">
+        <div class="user-av" id="user-av"></div>
+        <div class="user-info">
+            <div class="user-name" id="user-name">Chargement...</div>
+            <div class="user-dot">Anonyme et connecté</div>
+        </div>
+    </div>
+
+    <!-- Panneau de suivi d'humeur quotidien.
+         Le slider envoie le score au backend via saveMood() dans chat.js.
+         L'historique est affiché sous le slider après chargement. -->
+    <div class="wellbeing-panel">
+        <div class="wellbeing-title">
+            <span>Comment tu te sens ?</span>
+            <button class="wellbeing-help" onclick="toggleWellbeingInfo()">?</button>
+        </div>
+        <div class="wellbeing-info" id="wellbeing-info">
+            Note ton humeur aujourd'hui. Cette note est privée et t'aide à suivre ton évolution au fil du temps.
+        </div>
+        <div class="scale-wrap">
+            <input type="range" class="mood-slider" id="mood-slider" min="1" max="10" value="5">
+            <div class="scale-labels">
+                <span>1</span>
+                <span id="mood-value" class="mood-val">5</span>
+                <span>10</span>
+            </div>
+        </div>
+        <button class="save-mood" id="save-mood" onclick="saveMood()">Enregistrer</button>
+        <!-- Conteneur de l'historique des humeurs — rempli dynamiquement par chat.js -->
+        <div class="mood-history" id="mood-history"></div>
+    </div>
+
+    <!-- Navigation des salons.
+         Le nombre en ligne (nav-badge) est mis à jour en temps réel par le backend. -->
+    <nav class="sidebar-nav">
+        <div class="nav-section-title">Salon</div>
+        <button class="nav-item active">
+            <span class="nav-icon">💬</span>
+            <span>Espace Général</span>
+            <span class="nav-badge" id="online-count">—</span>
+        </button>
+    </nav>
+
+    <!-- Accès rapide aux ressources — ouvrent un panneau latéral via openPanel() -->
+    <nav class="sidebar-nav">
+        <div class="nav-section-title">Ressources</div>
+        <button class="nav-item" onclick="openPanel('breathing')">
+            <span class="nav-icon">🌬️</span>
+            <span>Exercice de respiration</span>
+        </button>
+        <button class="nav-item" onclick="openPanel('conseils')">
+            <span class="nav-icon">📖</span>
+            <span>Conseils bien-être</span>
+        </button>
+        <button class="nav-item" onclick="openPanel('urgence')">
+            <span class="nav-icon">🆘</span>
+            <span>Contacts d'urgence</span>
+        </button>
+    </nav>
+
+    <div class="sidebar-footer">
+        <!-- Redirige vers connexion.html — côté backend, la session devra être invalidée -->
+        <a href="connexion.html" class="exit-link">Changer d'identité</a>
+    </div>
+</aside>
+
+<!-- Overlay foncé affiché derrière la sidebar sur mobile -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+
+<!-- ============================================================
+     ZONE DE CHAT PRINCIPALE
+     ============================================================ -->
+<main class="chat-main">
+
+    <!-- En-tête du chat — affiche le salon actif et le nombre d'utilisateurs en ligne -->
+    <header class="chat-header">
+        <button class="menu-btn" onclick="toggleSidebar()">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <path d="M3 6H19M3 11H19M3 16H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+
+        <div class="header-info">
+            <div class="room-name">Espace Général</div>
+            <div class="room-meta">
+                <span class="online-indicator"></span>
+                <!-- Ce texte est mis à jour dynamiquement par le backend -->
+                <span id="header-count">— étudiant(e)s en ligne</span>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button class="icon-btn" onclick="openPanel('breathing')" title="Respiration">🌬️</button>
+            <button class="icon-btn" onclick="openPanel('urgence')"   title="Urgences">🆘</button>
+        </div>
+    </header>
+
+    <!-- Bannière de crise — masquée par défaut, affichée par showCrisisAlert() dans chat.js
+         quand un mot-clé de détresse est détecté dans un message envoyé. -->
+    <div class="crisis-alert" id="crisis-alert">
+        <div class="crisis-inner">
+            <span class="crisis-icon">🤝</span>
+            <div class="crisis-text">
+                <strong>Tu n'es pas seul(e).</strong>
+                Si tu traverses une situation difficile, des personnes sont là pour toi :
+                <strong>166</strong> (urgences Bénin, 24h/24) · <strong>SAMU Cotonou : 51 04 00 00</strong> · <strong>Centre Psychiatrique de Jacquot : 21 30 10 44</strong>
+            </div>
+            <button class="crisis-close" onclick="closeCrisisAlert()">✕</button>
+        </div>
+    </div>
+
+    <!-- Zone des messages — initialement vide.
+         chat.js supprime tout contenu statique au chargement et insère les messages
+         reçus du backend via appendMessage(). -->
+    <div class="messages-wrap" id="messages-wrap">
+
+        <!-- Message système de bienvenue — statique, toujours affiché -->
+        <div class="system-msg">
+            <div class="system-inner">
+                <div class="system-icon">🌟</div>
+                <div>
+                    <strong>Bienvenue dans l'Espace Général</strong>
+                    <p>Cet espace est bienveillant et anonyme. Tu peux partager, écouter, ou simplement être là. Respecte la confidentialité de chacun.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="day-separator">
+            <span>Aujourd'hui</span>
+        </div>
+
+        <!-- Les messages du chat seront injectés ici par chat.js après chargement de l'API -->
+
+    </div>
+
+    <!-- Zone de saisie du message.
+         L'avatar (input-av) est rempli par applyUserProfile() dans chat.js.
+         La textarea est auto-dimensionnée et limitée à 500 caractères côté JS. -->
+    <div class="input-zone">
+        <div class="input-wrap">
+            <div class="input-av" id="input-av"></div>
+            <textarea
+                id="msg-input"
+                placeholder="Partage tes pensées... (Entrée pour envoyer)"
+                rows="1"
+            ></textarea>
+            <button class="send-btn" id="send-btn" onclick="sendMessage()">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M3 10L17 3L10 17L8.5 11L3 10Z" fill="currentColor"/>
+                </svg>
+            </button>
+        </div>
+        <!-- Barre d'info — affiche les erreurs d'envoi et les avertissements de rate limit -->
+        <div class="input-hint-bar">
+            Anonyme · Respecte les autres · En cas d'urgence : <strong>166</strong> ou <strong>51 04 00 00</strong> (SAMU)
+        </div>
+    </div>
+</main>
+
+
+<!-- ============================================================
+     PANNEAU DE RESSOURCES (slide-in latéral)
+     Ouvert via openPanel(key) — le contenu est injecté par chat.js
+     selon la clé fournie (breathing, conseils, urgence).
+     ============================================================ -->
+<div class="resource-overlay" id="resource-overlay" onclick="closePanel()"></div>
+
+<div class="resource-panel" id="resource-panel">
+    <div class="rp-header">
+        <h3 id="rp-title">Ressources</h3>
+        <button onclick="closePanel()">✕</button>
+    </div>
+    <!-- Contenu injecté dynamiquement par openPanel() dans chat.js -->
+    <div class="rp-content" id="rp-content"></div>
+</div>
+
+<!-- security.js chargé en premier pour que les utilitaires soient disponibles dans chat.js -->
+<script src="js/security.js"></script>
+<script src="js/chat.js"></script>
+</body>
+</html>

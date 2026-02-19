@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trust Layer — Ton espace de parole</title>
+
+    <!-- ═══════════════════════════════════════
+         SECURITY HEADERS (https_tls section)
+         ═══════════════════════════════════════ -->
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self';
+                   script-src 'self' 'unsafe-inline';
+                   style-src  'self' 'unsafe-inline' https://fonts.googleapis.com;
+                   font-src   'self' https://fonts.gstatic.com;
+                   img-src    'self' data:;
+                   connect-src 'self';
+                   frame-ancestors 'none';">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="no-referrer">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,900;1,300;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/landing.css">
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav class="nav">
+        <div class="nav-logo">
+            <div class="logo-mark"></div>
+            <span>Trust Layer</span>
+        </div>
+        <a href="connexion.html" class="nav-cta">Rejoindre</a>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-bg">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+        </div>
+
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                Espace anonyme · Étudiant(e)s du Bénin
+            </div>
+
+            <h1 class="hero-title">
+                Un endroit pour<br>
+                <em>poser ce qui pèse</em>
+            </h1>
+
+            <p class="hero-sub">
+                Parler de ce qu'on vit ne devrait pas être compliqué.  
+                Ici, tu arrives comme tu es — sans nom, sans jugement, sans pression.
+            </p>
+
+            <div class="hero-actions">
+                <a href="connexion.html" class="btn-primary">
+                    Créer mon espace
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M4 9H14M14 9L10 5M14 9L10 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </a>
+                <button class="btn-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
+                    Comment ça marche ?
+                </button>
+            </div>
+
+            <div class="hero-trust">
+                <div class="trust-item">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 1L10 6H15L11 9.5L12.5 15L8 12L3.5 15L5 9.5L1 6H6L8 1Z" fill="currentColor"/>
+                    </svg>
+                    Anonymat total
+                </div>
+                <div class="trust-sep">·</div>
+                <div class="trust-item">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 1C5 1 2 3.5 2 7C2 11 8 15 8 15C8 15 14 11 14 7C14 3.5 11 1 8 1Z" fill="currentColor"/>
+                    </svg>
+                    Zéro donnée personnelle
+                </div>
+                <div class="trust-sep">·</div>
+                <div class="trust-item">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"/>
+                        <path d="M5 8L7 10L11 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Communauté bienveillante
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <div class="chat-preview">
+                <div class="preview-header">
+                    <div class="preview-dot red"></div>
+                    <div class="preview-dot yellow"></div>
+                    <div class="preview-dot green"></div>
+                    <span>Espace Général</span>
+                </div>
+                <div class="preview-messages">
+                    <div class="preview-msg left">
+                        <div class="msg-av">🌸</div>
+                        <div class="msg-bubble left-bubble">Les examens m'étouffent en ce moment...</div>
+                    </div>
+                    <div class="preview-msg right">
+                        <div class="msg-bubble right-bubble">Je comprends. Tu n'es pas seul(e) dans ça 💙</div>
+                        <div class="msg-av">🦋</div>
+                    </div>
+                    <div class="preview-msg left">
+                        <div class="msg-av">🌙</div>
+                        <div class="msg-bubble left-bubble">Ça m'aide tellement de pouvoir en parler ici</div>
+                    </div>
+                    <div class="preview-typing">
+                        <div class="msg-av">✨</div>
+                        <div class="typing-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features" id="features">
+        <div class="features-intro">
+            <h2>Construit pour <em>ta réalité</em></h2>
+            <p>On sait que parler de ce qu'on vit n'est pas simple. Trust Layer est pensé pour ça.</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card card-purple">
+                <div class="feature-icon-wrap">
+                    <span>🤝</span>
+                </div>
+                <h3>Anonymat radical</h3>
+                <p>Dans la communaute, tu restes anonyme (pseudo + avatar). Les informations demandées sont protegées et ne servent qu'en cas de probleme grave ou d'urgence.</p>
+            </div>
+
+            <div class="feature-card card-peach">
+                <div class="feature-icon-wrap">
+                    <span>💬</span>
+                </div>
+                <h3>Chat communautaire</h3>
+                <p>Un espace de parole entre étudiant(e)s. Partage, écoute, soutiens — à ton rythme, sans obligation.</p>
+            </div>
+
+            <div class="feature-card card-blue">
+                <div class="feature-icon-wrap">
+                    <span>🛡️</span>
+                </div>
+                <h3>Filet de sécurité</h3>
+                <p>Certains mots déclenchent automatiquement un message d'aide et les contacts d'urgence. Tu n'es jamais laissé(e) seul(e).</p>
+            </div>
+
+            <div class="feature-card card-peach">
+                <div class="feature-icon-wrap">
+                    <span>📊</span>
+                </div>
+                <h3>Suivi de ton bien-être</h3>
+                <p>Note ton humeur de 1 à 10 à chaque visite. Vois ton évolution dans le temps, pour toi seul(e).</p>
+            </div>
+
+            <div class="feature-card card-blue">
+                <div class="feature-icon-wrap">
+                    <span>🌱</span>
+                </div>
+                <h3>Ressources pratiques</h3>
+                <p>Exercices de respiration, conseils courts, contacts utiles. Accessibles en un clic depuis le chat.</p>
+            </div>
+
+            <div class="feature-card card-purple">
+                <div class="feature-icon-wrap">
+                    <span>🔒</span>
+                </div>
+                <h3>Ta vie privée, c'est sacré</h3>
+                <p>Tes données ne sont ni vendues, ni partagées. Cette plateforme existe pour toi, pas pour exploiter tes informations.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- QUOTE SECTION -->
+    <section class="quote-section">
+        <div class="quote-inner">
+            <div class="quote-mark">"</div>
+            <blockquote>
+                Parfois tout ce dont on a besoin,<br>
+                c'est de savoir qu'on n'est pas seul(e).
+            </blockquote>
+            <div class="quote-source">Trust Layer · Bénin · 2026</div>
+        </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="final-cta">
+        <h2>Prêt(e) à prendre soin de toi ?</h2>
+        <p>L'entrée est libre. Aucune inscription. Ça prend 30 secondes.</p>
+        <a href="connexion.html" class="btn-primary large">
+            Créer mon espace anonyme
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M5 10H15M15 10L11 6M15 10L11 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </a>
+        <p class="final-note">🔒 Aucune donnée personnelle · 100 % confidentiel</p>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-logo">
+            <div class="logo-mark small"></div>
+            <span>Trust Layer</span>
+        </div>
+        <p>Un projet étudiant pour les étudiant(e)s · Bénin 2026</p>
+    </footer>
+
+    <script src="js/landing.js"></script>
+    <script src="js/security.js"></script>
+</body>
+</html>
