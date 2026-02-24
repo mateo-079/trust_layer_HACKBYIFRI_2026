@@ -28,7 +28,7 @@ const PSEUDOS = [
     'RacineForte','RivièreCalme','ColibriVif','ÉtoileFilante'
 ];
 
-const API_BASE = '/api';
+const API_BASE = 'http://localhost:3000/api';
 
 
 // -----------------------------------------------------------------------------
@@ -322,11 +322,12 @@ async function submitLogin() {
 
         if (!data || !data.user) throw new Error('Connexion impossible.');
 
-        // Stockage des données de session — utilisées dans chat.js pour identifier l'utilisateur.
+        // Stockage du token JWT et des données de session
+        if (data.token) sessionStorage.setItem('tl_token', data.token);
         sessionStorage.setItem('tl_user_id', data.user.id);
         sessionStorage.setItem('tl_profile',  JSON.stringify(data.user));
-        sessionStorage.setItem('tl_avatar',   data.user.avatar);
-        sessionStorage.setItem('tl_pseudo',   data.user.pseudo);
+        sessionStorage.setItem('tl_avatar',   data.user.avatar  || '');
+        sessionStorage.setItem('tl_pseudo',   data.user.username || data.user.pseudo || '');
 
         showLoginHint('Connexion réussie. Redirection...', 'ok');
         window.location.href = 'chat.html';
@@ -378,14 +379,14 @@ async function submitProfile() {
     try {
         const profile = getProfileData();
         const payload = {
-            avatar:          selectedAvatar,
-            pseudo,
-            first_name:      profile.firstName,
-            last_name:       profile.lastName,
-            email:           profile.email,
-            emergency_name:  profile.emergencyName,
-            emergency_phone: profile.emergencyPhone,
-            password:        profile.password
+            avatar:         selectedAvatar,
+            username:       pseudo,
+            firstName:      profile.firstName,
+            lastName:       profile.lastName,
+            email:          profile.email,
+            emergencyName:  profile.emergencyName,
+            emergencyPhone: profile.emergencyPhone,
+            password:       profile.password
         };
 
         const data = await apiRequest('/register', {
@@ -395,11 +396,12 @@ async function submitProfile() {
 
         if (!data || !data.user) throw new Error('Création impossible.');
 
-        // Stockage des données de session retournées par le backend.
+        // Stockage du token JWT et des données de session
+        if (data.token) sessionStorage.setItem('tl_token', data.token);
         sessionStorage.setItem('tl_user_id', data.user.id);
         sessionStorage.setItem('tl_profile',  JSON.stringify(data.user));
-        sessionStorage.setItem('tl_avatar',   data.user.avatar);
-        sessionStorage.setItem('tl_pseudo',   data.user.pseudo);
+        sessionStorage.setItem('tl_avatar',   data.user.avatar  || '');
+        sessionStorage.setItem('tl_pseudo',   data.user.username || data.user.pseudo || '');
 
         showServerHint('Compte créé. Redirection...', 'ok');
         window.location.href = 'chat.html';

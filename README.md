@@ -1,179 +1,213 @@
-# Trust Layer
+# 🛡️ Trust Layer — Guide d'installation pour collaborateurs
 
-Dépôt de l'équipe Student Compass Team pour le projet Trust Layer.
-
-Trust Layer est une application web de soutien à la santé mentale destinée aux étudiant(e)s du Bénin. Elle offre un espace de discussion communautaire entièrement anonyme, accompagné d'outils de bien-être et d'accès rapide aux ressources d'urgence.
+> **À lire jusqu'au bout avant de commencer.** Ce guide suppose que tu as déjà installé MySQL et créé un utilisateur MySQL sur ton ordinateur. Si ce n'est pas fait, demande à l'équipe avant de continuer.
 
 ---
 
-## Structure du projet
+## Ce dont tu as besoin
+
+Avant de commencer, vérifie que tu as bien installé :
+
+- **Node.js** version 18 ou plus récente → [télécharger ici](https://nodejs.org)
+- **MySQL 8** → déjà installé normalement
+- **VS Code** → pour ouvrir et modifier les fichiers
+- **Live Server** → extension VS Code (cherche "Live Server" dans les extensions)
+
+Pour vérifier que Node.js est bien installé, ouvre un terminal et tape :
+```bash
+node -v
+```
+Tu dois voir quelque chose comme `v22.x.x`. Si tu vois une erreur, installe Node.js d'abord.
+
+---
+
+## Étape 1 — Récupérer les fichiers du projet
+
+Récupère le dossier du projet auprès de l'équipe (par clé USB, Google Drive, ou Git). Tu dois avoir cette structure :
 
 ```
-trust_layer/
-├── index.html          Page d'accueil (landing page)
-├── connexion.html      Inscription (3 étapes) et connexion
-├── chat.html           Interface de chat principale
-├── politique.html      Politiques de confidentialité et règles d'utilisation
-├── css/
-│   ├── landing.css
-│   ├── connexion.css
-│   ├── chat.css
-│   └── politique.css
-└── js/
-    ├── security.js     Utilitaires de sécurité partagés (chargé en premier)
-    ├── landing.js      Animations de la page d'accueil
-    ├── connexion.js    Logique du formulaire d'inscription et de connexion
-    └── chat.js         Logique du chat, bien-être et ressources
+Back-Test/
+├── backend/
+│   ├── src/
+│   ├── schema.sql
+│   ├── package.json
+│   └── .env.example
+└── frontend/
+    ├── chat.html
+    ├── connexion.html
+    └── js/
 ```
 
 ---
 
-## État du frontend
+## Étape 2 — Créer la base de données MySQL
 
-Le frontend est complet et prêt à être connecté au backend. Toutes les simulations ont été retirées. Chaque appel réseau pointe vers une route API réelle — si le serveur est absent, les erreurs remontent proprement à l'interface.
+Tu as déjà MySQL installé. Maintenant on va créer la base de données du projet.
 
-**Ce qui est en place :**
-- Formulaire d'inscription en 3 étapes avec validation temps réel
-- Connexion email / mot de passe
-- Interface de chat (chargement de messages, envoi, réactions, signalement)
-- Suivi d'humeur quotidien (slider 1–10, historique)
-- Panneau de ressources : respiration guidée, conseils bien-être, contacts d'urgence
-- Détection de mots-clés de détresse avec affichage automatique de la bannière d'urgence
-- Sécurité frontend : échappement XSS, rate limiting client, validation des entrées, token CSRF
+**Ouvre MySQL Workbench** (l'application MySQL avec l'interface graphique).
 
----
+Connecte-toi avec ton utilisateur root (ou celui que tu as créé lors de l'installation).
 
-## Routes API attendues
+Une fois connecté, clique sur **File → Open SQL Script** et sélectionne le fichier `schema.sql` qui se trouve à la racine du dossier `backend/`.
 
-Le frontend s'attend aux routes suivantes. Le backend doit les implémenter.
+Ensuite clique sur l'**éclair ⚡** (ou Ctrl+Shift+Enter) pour exécuter le script.
 
-| Méthode | Route                  | Description                                              |
-|---------|------------------------|----------------------------------------------------------|
-| POST    | `/api/register`        | Créer un compte                                          |
-| POST    | `/api/login`           | Authentifier un utilisateur                              |
-| GET     | `/api/profile/:id`     | Récupérer le profil d'un utilisateur                     |
-| GET     | `/api/messages`        | Récupérer les messages (paramètre `?limit=50`)           |
-| POST    | `/api/messages`        | Envoyer un message                                       |
-| GET     | `/api/moods/:id`       | Récupérer l'historique d'humeur d'un utilisateur         |
-| POST    | `/api/moods`           | Enregistrer une note d'humeur                            |
+Tu dois voir apparaître 7 lignes vertes dans la zone "Action Output" en bas. Si c'est vert, la base de données est créée.
 
-### Format des réponses attendues
+Maintenant crée l'utilisateur dédié au projet. Toujours dans Workbench, ouvre un nouvel onglet de requête et colle ces lignes :
 
-**POST /api/register — POST /api/login**
-```json
-{
-  "user": {
-    "id": 1,
-    "avatar": "🌟",
-    "pseudo": "ÉtoileDuSoir42",
-    "first_name": "Aïcha",
-    "last_name": "Koffi",
-    "email": "exemple@mail.com"
-  }
-}
+```sql
+CREATE DATABASE IF NOT EXISTS trustlayer CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'trustlayer_user'@'localhost' IDENTIFIED BY 'TrustLayer2026!';
+GRANT SELECT, INSERT, UPDATE, DELETE ON trustlayer.* TO 'trustlayer_user'@'localhost';
+FLUSH PRIVILEGES;
 ```
 
-**GET /api/messages**
-```json
-{
-  "messages": [
-    {
-      "id": 1,
-      "user_id": 1,
-      "avatar": "🌟",
-      "pseudo": "ÉtoileDuSoir42",
-      "content": "Bonjour tout le monde",
-      "created_at": "2026-02-19T14:32:00Z"
-    }
-  ]
-}
+Exécute avec l'éclair ⚡. Si tu vois une erreur disant que l'utilisateur existe déjà, c'est bon — passe à l'étape suivante.
+
+---
+
+## Étape 3 — Configurer le fichier `.env`
+
+Le fichier `.env` contient les informations de connexion à ta base de données. Il n'est **pas partagé** par mesure de sécurité — tu dois le créer toi-même.
+
+Dans le dossier `backend/`, tu trouveras un fichier appelé `.env.example`. Fais-en une copie et renomme-la `.env` (sans le `.example`).
+
+Ouvre ce fichier `.env` dans VS Code et remplis-le comme ceci :
+
+```dotenv
+NODE_ENV=development
+PORT=3000
+FRONTEND_URL=http://127.0.0.1:5500
+
+JWT_SECRET=remplace_cette_valeur_par_une_longue_chaine_aleatoire
+JWT_EXPIRES_IN=7d
+
+BCRYPT_ROUNDS=12
+
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=trustlayer
+DB_USER=trustlayer_user
+DB_PASSWORD=TrustLayer2026!
+DB_CONNECTION_LIMIT=10
 ```
 
-**POST /api/messages**
-```json
-{
-  "message": {
-    "id": 2,
-    "user_id": 1,
-    "avatar": "🌟",
-    "pseudo": "ÉtoileDuSoir42",
-    "content": "Message envoyé",
-    "created_at": "2026-02-19T14:35:00Z"
-  }
-}
+> ⚠️ **Important :** Pour le `JWT_SECRET`, génère une vraie valeur aléatoire. Ouvre un terminal dans le dossier `backend/` et tape :
+> ```bash
+> node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+> ```
+> Copie le résultat et colle-le comme valeur de `JWT_SECRET`.
+
+---
+
+## Étape 4 — Installer les dépendances Node.js
+
+Ouvre un terminal dans le dossier `backend/` (dans VS Code : Terminal → Nouveau terminal, assure-toi d'être dans le bon dossier).
+
+Tape :
+```bash
+npm install
 ```
 
-**GET /api/moods/:id**
-```json
-{
-  "moods": [
-    { "score": 7, "date": "19 févr.", "created_at": "2026-02-19T10:00:00Z" }
-  ]
-}
+Tu verras plein de texte défiler — c'est normal. Attends que ça se termine (1 à 2 minutes). À la fin tu verras quelque chose comme `added 312 packages`.
+
+---
+
+## Étape 5 — Démarrer MySQL
+
+> ⚠️ **À faire à chaque fois que tu redémarres ton ordinateur.**
+
+MySQL s'arrête quand tu étiens ton PC. Pour le relancer, ouvre **PowerShell en administrateur** (clic droit sur PowerShell → "Exécuter en tant qu'administrateur") et tape :
+
+```powershell
+net start MySQL80
 ```
 
-En cas d'erreur, toutes les routes doivent retourner un objet `{ "error": "message lisible" }` avec le code HTTP approprié (400, 401, 404, 500…).
+Tu dois voir : `Le service MySQL80 a démarré.`
+
+Si tu vois `Le service a déjà été démarré`, c'est bon aussi.
 
 ---
 
-## Session utilisateur
+## Étape 6 — Démarrer le serveur backend
 
-Après connexion ou inscription réussie, le frontend stocke en `sessionStorage` :
-
-| Clé             | Contenu                          |
-|-----------------|----------------------------------|
-| `tl_user_id`    | Identifiant numérique            |
-| `tl_avatar`     | Emoji avatar                     |
-| `tl_pseudo`     | Pseudo choisi                    |
-| `tl_profile`    | Objet utilisateur complet (JSON) |
-
-Si `tl_user_id` est absent au chargement de `chat.html`, l'utilisateur est redirigé vers `connexion.html`.
-
----
-
-## Stack technique
-
-- **Frontend :** HTML5 / CSS3 / JavaScript vanilla (ES2022+)
-- **Typographie :** Fraunces (titres) + DM Sans (corps) via Google Fonts
-- **Backend prévu :** Node.js + Express ou Python + FastAPI
-- **Base de données prévue :** MySQL + Redis
-- **Temps réel :** WebSocket (Socket.io ou natif)
-- **Authentification :** JWT avec expiration
-
----
-
-## Sécurité frontend en place
-
-- Échappement HTML systématique de toutes les données affichées (protection XSS)
-- Validation et sanitisation des entrées avant tout envoi à l'API
-- Rate limiting côté client (10 messages / 30 secondes)
-- En-têtes Content-Security-Policy déclarés sur chaque page HTML
-- Aucune donnée sensible stockée en localStorage (uniquement l'historique d'humeur anonymisé)
-- Token CSRF généré côté client — le backend doit le valider
-
-**À implémenter côté backend :**
-- Hachage des mots de passe (bcrypt)
-- Validation serveur de toutes les entrées (ne pas se fier uniquement au frontend)
-- Rate limiting serveur
-- HTTPS obligatoire en production
-- Logs de sécurité et détection d'abus
-
----
-
-## Lancer le projet en développement
-
-Le projet est du HTML/CSS/JS pur — aucun build requis.
+Dans le terminal VS Code (toujours dans le dossier `backend/`), tape :
 
 ```bash
-# Depuis le dossier du projet
-python3 -m http.server 8000
-# Ouvrir : http://localhost:8000
+npm run dev
 ```
 
-Sans backend actif, les pages d'accueil et de politique sont accessibles. Les pages de connexion et de chat retourneront des erreurs réseau — c'est le comportement attendu.
+Si tout fonctionne, tu dois voir exactement ces deux lignes :
+
+```
+info: Serveur démarré {"port":3000,"env":"development"}
+info: Connexion MySQL établie {"host":"localhost","database":"trustlayer"}
+```
+
+Si tu vois une erreur, relis les étapes 2, 3 et 5 — 99% du temps c'est MySQL qui n'est pas démarré ou le `.env` mal configuré.
+
+> Le serveur tourne maintenant sur `http://localhost:3000`. **Laisse ce terminal ouvert** — si tu le fermes, le serveur s'arrête.
 
 ---
 
-## Équipe
+## Étape 7 — Ouvrir le frontend
 
-Student Compass Team — Projet Trust Layer · Bénin, 2026
+Dans VS Code, ouvre le dossier `frontend/`. Fais un clic droit sur le fichier `connexion.html` et clique sur **"Open with Live Server"**.
+
+Ton navigateur va s'ouvrir automatiquement sur `http://127.0.0.1:5500/frontend/connexion.html`.
+
+Tu peux maintenant créer un compte et tester le chat !
+
+---
+
+## Étape 8 — Tester que tout fonctionne
+
+Pour confirmer que tout est bien branché :
+
+1. Crée un compte via le formulaire d'inscription
+2. Connecte-toi — tu dois arriver sur la page de chat
+3. Envoie un message — il doit apparaître dans le chat
+4. Ouvre un **deuxième onglet**, connecte-toi avec un autre compte
+5. Envoie un message depuis l'un des onglets — il doit apparaître **instantanément** dans les deux onglets
+
+Si le message apparaît en temps réel dans les deux onglets, **tout fonctionne parfaitement**.
+
+---
+
+## En cas de problème
+
+**Le serveur ne démarre pas**
+→ Vérifie que MySQL est bien démarré (étape 5)
+→ Vérifie que ton `.env` est bien rempli (étape 3)
+→ Vérifie que tu es bien dans le dossier `backend/` dans le terminal
+
+**"Cannot find module" au démarrage**
+→ Tu n'as pas fait `npm install` ou tu n'es pas dans le bon dossier
+
+**La page de chat s'ouvre mais les messages ne s'envoient pas**
+→ Vérifie que le serveur backend tourne (terminal avec les logs)
+→ Ouvre la console du navigateur (F12 → Console) et note l'erreur
+
+**Les messages ne s'affichent pas en temps réel**
+→ Vérifie que le script Socket.io est bien dans `chat.html`
+→ Ouvre F12 → Console et cherche une erreur WebSocket
+
+**Mot de passe MySQL oublié**
+→ Contacte l'équipe, ne touche pas à MySQL tout seul
+
+---
+
+## À retenir pour chaque session de dev
+
+Chaque fois que tu veux travailler sur le projet :
+
+1. Ouvre PowerShell admin → `net start MySQL80`
+2. Dans VS Code, terminal dans `backend/` → `npm run dev`
+3. Clic droit sur `connexion.html` → Open with Live Server
+4. Travaille, teste, code
+5. Quand tu as fini, `Ctrl+C` dans le terminal pour arrêter le serveur
+
+---
+
+*Dernière mise à jour : 23 février 2026*

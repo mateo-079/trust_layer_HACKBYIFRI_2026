@@ -68,7 +68,104 @@ const rateLimiter = {
 // L'URL de base de l'API backend. À adapter selon l'environnement de déploiement.
 // Toutes les requêtes sont relatives à cette base.
 // -----------------------------------------------------------------------------
-const API_BASE = '/api';
+const API_BASE = 'http://localhost:3000/api';
+
+// -----------------------------------------------------------------------------
+// WEBSOCKET — Socket.io
+// Connexion persistante au serveur pour recevoir les messages en temps réel.
+// Le token JWT est envoyé à la connexion pour s'authentifier.
+// -----------------------------------------------------------------------------
+const SOCKET_URL = 'http://localhost:3000';
+let socket = null;
+
+function initSocket() {
+    // Guard : ne pas créer une deuxième connexion si déjà connecté
+    if (socket && socket.connected) return;
+
+    const token = sessionStorage.getItem('tl_token');
+    if (!token) return;
+
+    // Connexion avec le token JWT pour authentification WebSocket
+    // forceNew: false  → empêche de créer plusieurs connexions si initSocket() est appelé plusieurs fois
+    // transports websocket uniquement → évite les reconnexions multiples polling+websocket
+    socket = io(SOCKET_URL, {
+        auth:      { token },
+        transports: ['websocket'],
+        forceNew:  false,
+        reconnection:         true,
+        reconnectionDelay:    2000,
+        reconnectionAttempts: 5,
+    });
+
+    socket.on('connect', () => {
+        console.log('WebSocket connecté :', socket.id);
+    });
+
+    socket.on('disconnect', (reason) => {
+        console.warn('WebSocket déconnecté :', reason);
+    });
+
+    socket.on('connect_error', (err) => {
+        console.warn('Erreur WebSocket :', err.message);
+    });
+
+    // ── Nouveau message reçu en temps réel ─────────────────────────────────────
+    // Tous les clients reçoivent cet événement quand quelqu'un envoie un message.
+    // Reçoit tous les messages (y compris les siens) et les affiche.
+    socket.on('new_message', (message) => {
+        appendMessage({
+            id:    message.id,
+            av:    message.avatar,
+            name:  message.username,
+            text:  message.content,
+            isOwn: message.user_id === state.userId,
+            time:  formatTime(message.created_at),
+        });
+    });
+
+    // ── Compteur d'utilisateurs en ligne ───────────────────────────────────────
+    socket.on('online_count', (count) => {
+        // Badge dans la nav (sidebar)
+        const badge = document.getElementById('online-count');
+        if (badge) badge.textContent = count;
+
+        // Texte sous le titre du salon
+        const header = document.getElementById('header-count');
+        if (header) header.textContent = `${count} étudiant(e)s en ligne`;
+    });
+
+    // ── Mise à jour des réactions ──────────────────────────────────────────────
+    socket.on('reaction_update', ({ messageId, count }) => {
+        const row = document.querySelector(`.msg-row[data-message-id="${messageId}"]`);
+        if (!row) return;
+        const counter = row.querySelector('.react-count');
+        if (counter) counter.textContent = count > 0 ? count : '';
+    });
+
+    // ── Indicateur "est en train d'écrire" ─────────────────────────────────────
+    let typingTimeout = null;
+    socket.on('user_typing', ({ username }) => {
+        const bar = document.querySelector('.input-hint-bar');
+        if (bar) bar.textContent = `${username} est en train d'écrire...`;
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            if (bar) bar.textContent = `Anonyme · Respecte les autres · En cas d'urgence : 166 ou 51 04 00 00 (SAMU)`;
+        }, 2000);
+    });
+
+    socket.on('user_stop_typing', () => {
+        clearTimeout(typingTimeout);
+        const bar = document.querySelector('.input-hint-bar');
+        if (bar) bar.textContent = `Anonyme · Respecte les autres · En cas d'urgence : 166 ou 51 04 00 00 (SAMU)`;
+    });
+
+    // ── Message supprimé ───────────────────────────────────────────────────────
+    socket.on('message_deleted', ({ messageId }) => {
+        const row = document.querySelector(`.msg-row[data-message-id="${messageId}"]`);
+        if (row) row.remove();
+    });
+}
+
 
 
 // -----------------------------------------------------------------------------
@@ -116,7 +213,7 @@ const secureStorage = {
 // onlineCount est initialisé à 0 — le vrai nombre viendra du backend via WebSocket
 // ou polling.
 // -----------------------------------------------------------------------------
-const state = {
+    const state = {
     userId:      parseInt(secureStorage.get('tl_user_id') || '0', 10) || null,
     avatar:      secureStorage.get('tl_avatar') || '',
     pseudo:      secureStorage.get('tl_pseudo') || '',
@@ -126,6 +223,7 @@ const state = {
     moodHistory: secureStorage.getMoodHistory(),
     onlineCount: 0,
 };
+
 
 // Si aucun userId en session, l'utilisateur n'est pas authentifié — on le renvoie
 // vers la page de connexion. Aucune donnée ne sera chargée.
@@ -163,6 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadMoodHistory();
     initInput();
     await loadMessages();
+    initSocket(); // Connexion WebSocket après chargement initial
 });
 
 
@@ -174,11 +273,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 // par l'API, ou d'un message générique si absent.
 // -----------------------------------------------------------------------------
 async function apiRequest(path, options = {}) {
-    const opts = {
-        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-        ...options
+    // Recupere le token JWT stocke lors de la connexion
+    const token = sessionStorage.getItem('tl_token');
+
+    const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
     };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+    const opts = { ...options, headers };
     const res  = await fetch(`${API_BASE}${path}`, opts);
+
+    // Token expire ou invalide -> retour connexion
+    if (res.status === 401) {
+        sessionStorage.clear();
+        window.location.href = 'connexion.html';
+        return {};
+    }
+
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
         const msg = data && data.error ? data.error : 'Erreur serveur.';
@@ -217,7 +330,7 @@ function now() {
 function applyProfileData(user) {
     if (!user) return;
     state.avatar    = user.avatar    || state.avatar;
-    state.pseudo    = user.pseudo    || state.pseudo;
+    state.pseudo    = user.username  || state.pseudo;
     state.firstName = user.first_name || '';
     state.lastName  = user.last_name  || '';
 }
@@ -267,7 +380,7 @@ async function loadMessages() {
             data.messages.forEach(m => {
                 appendMessage({
                     av:    m.avatar,
-                    name:  m.pseudo,
+                    name:  m.username,
                     text:  m.content,
                     isOwn: m.user_id === state.userId,
                     time:  formatTime(m.created_at)
@@ -311,7 +424,7 @@ async function saveMood() {
     try {
         await apiRequest('/moods', {
             method: 'POST',
-            body: JSON.stringify({ user_id: state.userId, score })
+            body: JSON.stringify({ score })
         });
         await loadMoodHistory();
         flashSaved();
@@ -374,10 +487,20 @@ function toggleWellbeingInfo() {
 function initInput() {
     const input = document.getElementById('msg-input');
 
+    // Délai pour éviter d'émettre typing à chaque frappe
+    let typingEmitTimeout = null;
+
     input.addEventListener('input', () => {
         if (input.value.length > 500) input.value = input.value.substring(0, 500);
         input.style.height = 'auto';
         input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+
+        // Émet 'typing' via WebSocket (avec debounce 300ms)
+        if (socket?.connected) {
+            clearTimeout(typingEmitTimeout);
+            socket.emit('typing');
+            typingEmitTimeout = setTimeout(() => socket.emit('stop_typing'), 1500);
+        }
     });
 
     input.addEventListener('keydown', e => {
@@ -424,18 +547,12 @@ async function sendMessage() {
     try {
         const data = await apiRequest('/messages', {
             method: 'POST',
-            body: JSON.stringify({ user_id: state.userId, content: text })
+            body: JSON.stringify({ content: text })
         });
 
-        if (data && data.message) {
-            appendMessage({
-                av:    data.message.avatar,
-                name:  data.message.pseudo,
-                text:  data.message.content,
-                isOwn: true,
-                time:  formatTime(data.message.created_at)
-            });
-        }
+        // Le message sera affiché par le WebSocket (new_message)
+        // qui le diffuse à tous les connectés, y compris l'expéditeur.
+        // On n'affiche rien ici pour éviter les doublons.
     } catch {
         showInputError("Impossible d'envoyer le message.");
     }
@@ -492,9 +609,26 @@ function showInputError(msg) {
 
 // Bascule l'état "aimé" d'un message.
 // Note : la persistance des réactions sera gérée par l'API (à implémenter).
-function reactMsg(btn) {
+async function reactMsg(btn) {
+    // Récupère le messageId stocké dans le data-attribute du bouton
+    const messageId = btn.closest('.msg-row')?.dataset.messageId;
+    if (!messageId) return;
+
+    // Optimistic UI : on change l'icône immédiatement sans attendre l'API
+    const wasLiked = btn.classList.contains('liked');
     btn.classList.toggle('liked');
     btn.textContent = btn.classList.contains('liked') ? '💜' : '🤍';
+
+    try {
+        const data = await apiRequest(`/messages/${messageId}/react`, { method: 'POST' });
+        // Met à jour le compteur si présent
+        const counter = btn.closest('.msg-actions')?.querySelector('.react-count');
+        if (counter && data.count !== undefined) counter.textContent = data.count > 0 ? data.count : '';
+    } catch {
+        // Rollback si l'API échoue
+        btn.classList.toggle('liked');
+        btn.textContent = wasLiked ? '💜' : '🤍';
+    }
 }
 
 
