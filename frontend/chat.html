@@ -38,7 +38,7 @@
 
     <div class="sidebar-header">
         <div class="logo-wrap">
-            <div class="logo-mark"></div>
+            <img src="assets/logo.png" alt="Trust Layer" class="logo-img">
             <span class="logo-text">Trust Layer</span>
         </div>
         <button class="sidebar-close" id="sidebar-close" onclick="toggleSidebar()">✕</button>
@@ -110,8 +110,12 @@
     </nav>
 
     <div class="sidebar-footer">
+        <!-- Bouton admin — affiché uniquement si is_admin = 1 en sessionStorage -->
+        <a href="admin.html" class="btn-admin" id="btn-admin" style="display:none">
+            <span>🛡️</span> Modération
+        </a>
         <button class="btn-logout" onclick="logout()">
-            <span></span> Se déconnecter
+            <span>🚪</span> Se déconnecter
         </button>
     </div>
 </aside>

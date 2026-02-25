@@ -69,6 +69,7 @@ router.post('/register', authLimiter, registerRules, validate, async (req, res) 
         username: user.username,
         email:    user.email,
         avatar:   user.avatar,
+        is_admin: user.is_admin || 0,
       },
     });
 
@@ -126,6 +127,7 @@ router.post('/login', authLimiter, loginRules, validate, async (req, res) => {
         username: user.username,
         email:    user.email,
         avatar:   user.avatar,
+        is_admin: user.is_admin || 0,
       },
     });
 

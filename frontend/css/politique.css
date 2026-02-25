@@ -75,11 +75,10 @@ a { text-decoration: none; color: inherit; }
     color: var(--dark);
 }
 
-.logo-mark {
-    width: 32px; height: 32px;
-    background: linear-gradient(135deg, var(--lavande) 0%, var(--peche) 100%);
-    border-radius: 8px;
-    position: relative;
+.logo-img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
     flex-shrink: 0;
 }
 

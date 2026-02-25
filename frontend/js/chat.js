@@ -265,6 +265,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     initInput();
     await loadMessages();
     initSocket(); // Connexion WebSocket après chargement initial
+
+    // Affiche le bouton modération uniquement pour les admins
+    if (sessionStorage.getItem('tl_is_admin') === '1') {
+        const btn = document.getElementById('btn-admin');
+        if (btn) btn.style.display = 'flex';
+    }
 });
 
 
@@ -382,6 +388,7 @@ async function loadMessages() {
         if (data && Array.isArray(data.messages)) {
             data.messages.forEach(m => {
                 appendMessage({
+                    id:    m.id,
                     av:    m.avatar,
                     name:  m.username,
                     text:  m.content,

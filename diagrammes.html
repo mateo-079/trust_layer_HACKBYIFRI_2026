@@ -659,57 +659,104 @@
   <section class="diagram-section" id="classes">
     <span class="section-label">Diagramme 3</span>
     <h2 class="section-title">Modèle de données</h2>
-    <p class="section-desc">Structure des tables MySQL et leurs relations.</p>
+    <p class="section-desc">7 tables MySQL production-ready — BIGINT UNSIGNED, contraintes NOT NULL, indexes optimisés, utf8mb4.</p>
     <div class="diagram-card">
       <div class="classes-grid">
 
+        <!-- users -->
         <div class="class-card">
           <div class="class-header lavande">users <span class="class-pk">TABLE</span></div>
           <div class="class-fields">
-            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">INT AUTO_INCREMENT</span></div>
+            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">BIGINT UNSIGNED</span></div>
+            <div class="class-field"><span>username</span><span class="type">VARCHAR(30) UNIQUE</span></div>
+            <div class="class-field"><span>email</span><span class="type">VARCHAR(255) UNIQUE</span></div>
+            <div class="class-field"><span>password_hash</span><span class="type">VARCHAR(255)</span></div>
             <div class="class-field"><span>avatar</span><span class="type">VARCHAR(10)</span></div>
-            <div class="class-field"><span>pseudo</span><span class="type">VARCHAR(20)</span></div>
-            <div class="class-field"><span>first_name</span><span class="type">VARCHAR(40)</span></div>
-            <div class="class-field"><span>last_name</span><span class="type">VARCHAR(40)</span></div>
-            <div class="class-field"><span>email</span><span class="type">VARCHAR UNIQUE</span></div>
-            <div class="class-field"><span>password_hash</span><span class="type">TEXT</span></div>
-            <div class="class-field"><span>emergency_name</span><span class="type">VARCHAR(40)</span></div>
-            <div class="class-field"><span>emergency_phone</span><span class="type">VARCHAR(20)</span></div>
+            <div class="class-field"><span>first_name</span><span class="type">VARCHAR(60) NULL</span></div>
+            <div class="class-field"><span>last_name</span><span class="type">VARCHAR(60) NULL</span></div>
+            <div class="class-field"><span>emergency_name</span><span class="type">VARCHAR(100) NULL</span></div>
+            <div class="class-field"><span>emergency_phone</span><span class="type">VARCHAR(30) NULL</span></div>
+            <div class="class-field"><span>is_banned</span><span class="type">TINYINT(1) DEFAULT 0</span></div>
+            <div class="class-field"><span>is_admin</span><span class="type">TINYINT(1) DEFAULT 0</span></div>
+            <div class="class-field"><span>created_at</span><span class="type">TIMESTAMP</span></div>
+            <div class="class-field"><span>updated_at</span><span class="type">TIMESTAMP NULL</span></div>
+          </div>
+        </div>
+
+        <!-- salons -->
+        <div class="class-card">
+          <div class="class-header" style="background:rgba(127,174,199,0.2);color:#C9D6DF">salons <span class="class-pk">TABLE</span></div>
+          <div class="class-fields">
+            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">TINYINT UNSIGNED</span></div>
+            <div class="class-field"><span>name</span><span class="type">VARCHAR(50) UNIQUE</span></div>
+            <div class="class-field"><span>description</span><span class="type">VARCHAR(255) NULL</span></div>
+            <div class="class-field"><span>is_active</span><span class="type">TINYINT(1) DEFAULT 1</span></div>
             <div class="class-field"><span>created_at</span><span class="type">TIMESTAMP</span></div>
           </div>
         </div>
 
+        <!-- messages -->
         <div class="class-card">
           <div class="class-header peche">messages <span class="class-pk">TABLE</span></div>
           <div class="class-fields">
-            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">INT AUTO_INCREMENT</span></div>
-            <div class="class-field"><span><span class="fk-mark">FK</span> user_id</span><span class="type">INT</span></div>
-            <div class="class-field"><span>salon_id</span><span class="type">INT</span></div>
+            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">BIGINT UNSIGNED</span></div>
+            <div class="class-field"><span><span class="fk-mark">FK</span> user_id</span><span class="type">→ users.id CASCADE</span></div>
+            <div class="class-field"><span><span class="fk-mark">FK</span> salon_id</span><span class="type">→ salons.id RESTRICT</span></div>
             <div class="class-field"><span>content</span><span class="type">TEXT</span></div>
-            <div class="class-field"><span>created_at</span><span class="type">TIMESTAMP</span></div>
             <div class="class-field"><span>deleted_at</span><span class="type">TIMESTAMP NULL</span></div>
+            <div class="class-field"><span>created_at</span><span class="type">TIMESTAMP</span></div>
           </div>
         </div>
 
+        <!-- moods -->
         <div class="class-card">
           <div class="class-header bleu">moods <span class="class-pk">TABLE</span></div>
           <div class="class-fields">
-            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">INT AUTO_INCREMENT</span></div>
-            <div class="class-field"><span><span class="fk-mark">FK</span> user_id</span><span class="type">INT</span></div>
-            <div class="class-field"><span>score</span><span class="type">SMALLINT (1-10)</span></div>
+            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">BIGINT UNSIGNED</span></div>
+            <div class="class-field"><span><span class="fk-mark">FK</span> user_id</span><span class="type">→ users.id CASCADE</span></div>
+            <div class="class-field"><span>score</span><span class="type">TINYINT (1-10)</span></div>
+            <div class="class-field"><span>note</span><span class="type">VARCHAR(500) NULL</span></div>
             <div class="class-field"><span>created_at</span><span class="type">TIMESTAMP</span></div>
           </div>
         </div>
 
+        <!-- reports -->
         <div class="class-card">
           <div class="class-header green">reports <span class="class-pk">TABLE</span></div>
           <div class="class-fields">
-            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">INT AUTO_INCREMENT</span></div>
-            <div class="class-field"><span><span class="fk-mark">FK</span> reporter_id</span><span class="type">INT</span></div>
-            <div class="class-field"><span><span class="fk-mark">FK</span> message_id</span><span class="type">INT</span></div>
-            <div class="class-field"><span>reason</span><span class="type">TEXT</span></div>
-            <div class="class-field"><span>status</span><span class="type">ENUM</span></div>
+            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">BIGINT UNSIGNED</span></div>
+            <div class="class-field"><span><span class="fk-mark">FK</span> reporter_id</span><span class="type">→ users.id CASCADE</span></div>
+            <div class="class-field"><span><span class="fk-mark">FK</span> message_id</span><span class="type">→ messages.id CASCADE</span></div>
+            <div class="class-field"><span>reason</span><span class="type">VARCHAR(500) NULL</span></div>
+            <div class="class-field"><span>status</span><span class="type">ENUM pending/resolved/rejected</span></div>
             <div class="class-field"><span>created_at</span><span class="type">TIMESTAMP</span></div>
+            <div class="class-field" style="color:var(--peche);font-size:0.65rem;padding:0.3rem 1rem">UNIQUE(reporter_id, message_id)</div>
+          </div>
+        </div>
+
+        <!-- reactions -->
+        <div class="class-card">
+          <div class="class-header" style="background:rgba(255,154,108,0.15);color:var(--peche-light)">reactions <span class="class-pk">TABLE</span></div>
+          <div class="class-fields">
+            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">BIGINT UNSIGNED</span></div>
+            <div class="class-field"><span><span class="fk-mark">FK</span> user_id</span><span class="type">→ users.id CASCADE</span></div>
+            <div class="class-field"><span><span class="fk-mark">FK</span> message_id</span><span class="type">→ messages.id CASCADE</span></div>
+            <div class="class-field"><span>emoji</span><span class="type">VARCHAR(10) DEFAULT 💜</span></div>
+            <div class="class-field"><span>created_at</span><span class="type">TIMESTAMP</span></div>
+            <div class="class-field" style="color:var(--peche);font-size:0.65rem;padding:0.3rem 1rem">UNIQUE(user_id, message_id)</div>
+          </div>
+        </div>
+
+        <!-- revoked_tokens -->
+        <div class="class-card">
+          <div class="class-header" style="background:rgba(229,57,53,0.12);color:#EF9A9A">revoked_tokens <span class="class-pk">TABLE</span></div>
+          <div class="class-fields">
+            <div class="class-field"><span><span class="pk-mark">PK</span> id</span><span class="type">BIGINT UNSIGNED</span></div>
+            <div class="class-field"><span>token_hash</span><span class="type">VARCHAR(64) UNIQUE</span></div>
+            <div class="class-field"><span><span class="fk-mark">FK</span> user_id</span><span class="type">→ users.id SET NULL</span></div>
+            <div class="class-field"><span>expires_at</span><span class="type">TIMESTAMP</span></div>
+            <div class="class-field"><span>created_at</span><span class="type">TIMESTAMP</span></div>
+            <div class="class-field" style="color:#EF9A9A;font-size:0.65rem;padding:0.3rem 1rem">SHA-256 du JWT — jamais le token brut</div>
           </div>
         </div>
 
@@ -719,15 +766,16 @@
         <div class="relation-chip">users <span class="rel-arrow">──1:N──</span> messages</div>
         <div class="relation-chip">users <span class="rel-arrow">──1:N──</span> moods</div>
         <div class="relation-chip">users <span class="rel-arrow">──1:N──</span> reports (reporter)</div>
+        <div class="relation-chip">users <span class="rel-arrow">──1:N──</span> reactions</div>
+        <div class="relation-chip">salons <span class="rel-arrow">──1:N──</span> messages</div>
         <div class="relation-chip">messages <span class="rel-arrow">──1:N──</span> reports</div>
-        <div class="relation-chip">messages.deleted_at NULL <span class="rel-arrow">→</span> soft delete (modération)</div>
+        <div class="relation-chip">messages <span class="rel-arrow">──1:N──</span> reactions</div>
+        <div class="relation-chip">messages.deleted_at NULL <span class="rel-arrow">→</span> soft delete</div>
+        <div class="relation-chip">revoked_tokens <span class="rel-arrow">→</span> ban immédiat / déconnexion forcée</div>
       </div>
     </div>
   </section>
 
-  <!-- ============================================================
-       DIAGRAMME 4 — ARCHITECTURE
-       ============================================================ -->
   <section class="diagram-section" id="architecture">
     <span class="section-label">Diagramme 4</span>
     <h2 class="section-title">Architecture des composants</h2>
@@ -741,11 +789,11 @@
           <div class="arch-layer-body">
             <div class="arch-block highlight">
               <span class="block-label">Pages HTML</span>
-              index · connexion · chat · politique
+              index · connexion · chat · admin · politique
             </div>
             <div class="arch-block highlight">
               <span class="block-label">CSS</span>
-              landing · connexion · chat · politique
+              landing · connexion · chat (palette bleu pervenche)
             </div>
             <div class="arch-block highlight">
               <span class="block-label">JavaScript</span>
@@ -753,84 +801,66 @@
             </div>
             <div class="arch-block">
               <span class="block-label">Stockage local</span>
-              sessionStorage (session) · localStorage (humeurs)
+              sessionStorage — token JWT, userId, pseudo, is_admin
             </div>
           </div>
         </div>
 
         <div class="arch-connector">
           <div class="arch-connector-line"></div>
-          <span class="arch-tag">HTTPS</span>
-          <span class="arch-tag ws">WebSocket (ws://)</span>
-          <div class="arch-connector-line"></div>
-        </div>
-
-        <!-- Couche Proxy -->
-        <div class="arch-layer">
-          <div class="arch-layer-header proxy">Serveur Web — nginx</div>
-          <div class="arch-layer-body">
-            <div class="arch-block">
-              <span class="block-label">Fichiers statiques</span>
-              /frontend/* → servi directement
-            </div>
-            <div class="arch-block">
-              <span class="block-label">Proxy inverse</span>
-              /api/* → backend:3000
-            </div>
-            <div class="arch-block">
-              <span class="block-label">Sécurité</span>
-              SSL/TLS · Headers HTTP · Rate limit IP
-            </div>
-          </div>
-        </div>
-
-        <div class="arch-connector">
-          <div class="arch-connector-line"></div>
-          <span class="arch-tag">HTTP local</span>
+          <span class="arch-tag">HTTP REST /api/*</span>
+          <span class="arch-tag ws">WebSocket ws://</span>
           <div class="arch-connector-line"></div>
         </div>
 
         <!-- Couche Application -->
         <div class="arch-layer">
-          <div class="arch-layer-header app">Backend — Node.js + Express</div>
+          <div class="arch-layer-header app">Backend — Node.js + Express + Socket.io</div>
           <div class="arch-layer-body">
             <div class="arch-block highlight-peche">
               <span class="block-label">Routes API</span>
-              auth · users · messages · moods · reports
+              /api/auth · /api/messages · /api/moods · /api/admin
             </div>
             <div class="arch-block highlight-peche">
               <span class="block-label">Middlewares</span>
-              authMiddleware · rateLimiter · sanitizer
+              authenticate (JWT) · requireAdmin · rateLimiter · validators
             </div>
             <div class="arch-block highlight-peche">
-              <span class="block-label">WebSocket</span>
-              chatSocket.js — diffusion temps réel
+              <span class="block-label">WebSocket — Socket.io</span>
+              new_message · online_count · user_typing · message_deleted · reaction_update · user_banned
             </div>
             <div class="arch-block">
-              <span class="block-label">Auth</span>
-              JWT · bcrypt
+              <span class="block-label">Sécurité</span>
+              JWT · bcrypt · helmet · CORS · tokens révoqués (SHA-256)
+            </div>
+            <div class="arch-block">
+              <span class="block-label">Logs</span>
+              winston — emails masqués, rotation fichiers
             </div>
           </div>
         </div>
 
         <div class="arch-connector">
           <div class="arch-connector-line"></div>
-          <span class="arch-tag">mysql2</span>
-          <span class="arch-tag ws">ioredis</span>
+          <span class="arch-tag">mysql2/promise — pool de connexions</span>
           <div class="arch-connector-line"></div>
         </div>
 
         <!-- Couche Données -->
         <div class="arch-layer">
-          <div class="arch-layer-header data">Données</div>
+          <div class="arch-layer-header data">Données — MySQL 8.0</div>
           <div class="arch-layer-body">
             <div class="arch-block highlight-green">
-              <span class="block-label">MySQL</span>
-              users · messages · moods · reports
+              <span class="block-label">7 tables</span>
+              users · salons · messages · moods · reports · reactions · revoked_tokens
             </div>
             <div class="arch-block highlight-green">
-              <span class="block-label">Redis</span>
-              sessions actives · rate limiting · compteur en ligne
+              <span class="block-label">Garanties</span>
+              BIGINT UNSIGNED · utf8mb4 · FK CASCADE · UNIQUE constraints · indexes composés
+            </div>
+            <div class="arch-block highlight-green">
+              <span class="block-label">Patterns</span>
+              Soft delete (deleted_at) · Token revocation · Toggle réaction
             </div>
           </div>
         </div>

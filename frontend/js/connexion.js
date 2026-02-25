@@ -328,6 +328,7 @@ async function submitLogin() {
         sessionStorage.setItem('tl_profile',  JSON.stringify(data.user));
         sessionStorage.setItem('tl_avatar',   data.user.avatar  || '');
         sessionStorage.setItem('tl_pseudo',   data.user.username || data.user.pseudo || '');
+        sessionStorage.setItem('tl_is_admin', data.user.is_admin ? '1' : '0');
 
         showLoginHint('Connexion réussie. Redirection...', 'ok');
         window.location.href = 'chat.html';
@@ -402,6 +403,7 @@ async function submitProfile() {
         sessionStorage.setItem('tl_profile',  JSON.stringify(data.user));
         sessionStorage.setItem('tl_avatar',   data.user.avatar  || '');
         sessionStorage.setItem('tl_pseudo',   data.user.username || data.user.pseudo || '');
+        sessionStorage.setItem('tl_is_admin', data.user.is_admin ? '1' : '0');
 
         showServerHint('Compte créé. Redirection...', 'ok');
         window.location.href = 'chat.html';

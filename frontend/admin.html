@@ -59,6 +59,12 @@ body {
   color: var(--text);
 }
 
+.adm-logo .logo-img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    border-radius: 8px;
+}
 .adm-logo span { font-size: 1.3rem; }
 .adm-badge {
   background: var(--red);
@@ -80,6 +86,18 @@ body {
 }
 
 #adm-name { color: var(--text); font-weight: 600; }
+
+.btn-back-chat {
+  background: transparent;
+  border: 1px solid rgba(74,127,193,0.3);
+  color: var(--blue);
+  padding: 0.3rem 0.9rem;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.btn-back-chat:hover { background: var(--blue-dim); }
 
 .btn-exit {
   background: transparent;
@@ -442,11 +460,12 @@ body {
 <!-- ── Header ─────────────────────────────────────────────────── -->
 <header class="adm-header">
   <div class="adm-logo">
-    <span>🛡️</span>
+    <img src="assets/logo.png" alt="Trust Layer" class="logo-img">
     Trust Layer
     <span class="adm-badge">Admin</span>
   </div>
   <div class="adm-user">
+    <a href="chat.html" class="btn-back-chat">← Retour au chat</a>
     Connecté en tant que <span id="adm-name">—</span>
     <button class="btn-exit" onclick="logout()">Déconnexion</button>
   </div>
@@ -536,7 +555,7 @@ async function checkAuth() {
     const data = await res.json();
 
     // Hydrate le nom affiché dans le header
-    const stored = sessionStorage.getItem('tl_username') || 'Admin';
+    const stored = sessionStorage.getItem('tl_pseudo') || sessionStorage.getItem('tl_username') || 'Admin';
     document.getElementById('adm-name').textContent = stored;
 
     return data;

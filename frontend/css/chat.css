@@ -89,6 +89,20 @@ body {
     opacity: 0.3;
 }
 
+/* Logo image — remplace logo-mark quand le fichier assets/logo.png est présent */
+.logo-img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    flex-shrink: 0;
+    border-radius: 8px;
+}
+
+.logo-img.small {
+    width: 20px;
+    height: 20px;
+}
+
 .logo-text {
     font-family: var(--font-display);
     font-weight: 600;
@@ -346,6 +360,29 @@ body {
     margin-top: auto;
     padding: 1.2rem 1.4rem;
     border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.btn-admin {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    background: rgba(74,127,193,0.12);
+    border: 1.5px solid rgba(74,127,193,0.35);
+    border-radius: var(--radius-sm);
+    color: var(--lavande);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    margin-bottom: 0.5rem;
+}
+.btn-admin:hover {
+    background: rgba(74,127,193,0.22);
+    border-color: var(--lavande);
 }
 
 .btn-logout {

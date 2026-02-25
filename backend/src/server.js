@@ -57,13 +57,19 @@ app.use(helmet({
 
 app.use(cors({
   origin(origin, callback) {
+    // Autorise les requêtes sans origin (Postman, curl) et les origins connues
     if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
     callback(new Error(`CORS bloqué pour l'origine : ${origin}`));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
 }));
+
+// Répond immédiatement aux preflight OPTIONS sur toutes les routes
+app.options('*', cors());
 
 app.use(express.json({ limit: '16kb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));

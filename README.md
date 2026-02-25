@@ -1,213 +1,404 @@
-# 🛡️ Trust Layer — Guide d'installation pour collaborateurs
+# Trust Layer
 
-> **À lire jusqu'au bout avant de commencer.** Ce guide suppose que tu as déjà installé MySQL et créé un utilisateur MySQL sur ton ordinateur. Si ce n'est pas fait, demande à l'équipe avant de continuer.
+Application web de soutien à la santé mentale destinée aux étudiants du Bénin.
+Espace de discussion communautaire anonyme avec suivi d'humeur, ressources de bien-être et système de modération.
 
----
-
-## Ce dont tu as besoin
-
-Avant de commencer, vérifie que tu as bien installé :
-
-- **Node.js** version 18 ou plus récente → [télécharger ici](https://nodejs.org)
-- **MySQL 8** → déjà installé normalement
-- **VS Code** → pour ouvrir et modifier les fichiers
-- **Live Server** → extension VS Code (cherche "Live Server" dans les extensions)
-
-Pour vérifier que Node.js est bien installé, ouvre un terminal et tape :
-```bash
-node -v
-```
-Tu dois voir quelque chose comme `v22.x.x`. Si tu vois une erreur, installe Node.js d'abord.
+Développé par la Student Compass Team — HACKBYIFRI 2026.
 
 ---
 
-## Étape 1 — Récupérer les fichiers du projet
+## Table des matières
 
-Récupère le dossier du projet auprès de l'équipe (par clé USB, Google Drive, ou Git). Tu dois avoir cette structure :
+1. [Présentation du projet](#présentation-du-projet)
+2. [Prérequis](#prérequis)
+3. [Structure du projet](#structure-du-projet)
+4. [Installation et configuration](#installation-et-configuration)
+5. [Installation et configuration de MySQL](#installation-et-configuration-de-mysql)
+6. [Lancer l'application](#lancer-lapplication)
+7. [Utilisation](#utilisation)
+8. [Variables d'environnement](#variables-denvironnement)
+
+---
+
+## Présentation du projet
+
+Trust Layer permet à un étudiant de rejoindre un espace d'échange en 30 secondes sous un pseudo et un avatar anonymes. L'identité réelle n'est jamais exposée dans le chat.
+
+Fonctionnalités principales :
+
+- Chat communautaire en temps réel (Socket.io)
+- Inscription et authentification sécurisée (JWT + bcrypt)
+- Suivi quotidien d'humeur avec visualisation sur 7 ou 30 jours
+- Détection automatique de mots-clés de détresse avec affichage des contacts d'urgence
+- Exercice de respiration guidée et ressources de bien-être
+- Signalement de messages avec panneau de modération admin
+- Réactions aux messages (soutien anonyme)
+
+---
+
+## Prérequis
+
+Avant de commencer, tu dois avoir installé sur ta machine :
+
+- **Node.js** version 18 ou supérieure — https://nodejs.org
+  Pour vérifier : `node --version`
+
+- **MySQL** version 8.0 — https://dev.mysql.com/downloads/mysql/
+  Pour vérifier : `mysql --version`
+
+- **Git** — https://git-scm.com
+  Pour vérifier : `git --version`
+
+- Un éditeur de code, par exemple **VS Code** — https://code.visualstudio.com
+
+- Une extension pour servir les fichiers frontend statiques. Recommandé : **Live Server** (extension VS Code) ou **http-server** via npm.
+
+---
+
+## Structure du projet
 
 ```
-Back-Test/
+trust-layer/
 ├── backend/
 │   ├── src/
-│   ├── schema.sql
-│   ├── package.json
-│   └── .env.example
+│   │   ├── server.js               Point d'entrée — Express + Socket.io
+│   │   ├── db/
+│   │   │   └── database.js         Pool de connexions MySQL
+│   │   ├── middleware/
+│   │   │   ├── auth_middleware.js  Vérification JWT
+│   │   │   ├── admin_middleware.js Vérification is_admin
+│   │   │   ├── rateLimiter.js      Limitation des requêtes
+│   │   │   └── validators.js       Validation des entrées
+│   │   ├── routes/
+│   │   │   ├── routes_auth.js      Inscription et connexion
+│   │   │   ├── routes_messages.js  Messages, réactions, signalements
+│   │   │   ├── routes_moods.js     Suivi d'humeur
+│   │   │   ├── routes_profile.js   Profil utilisateur
+│   │   │   └── routes_admin.js     Modération (admin uniquement)
+│   │   ├── socket/
+│   │   │   └── socketHandler.js    Événements WebSocket
+│   │   └── utils/
+│   │       └── logger.js           Winston — logs applicatifs
+│   ├── schema.sql                  Script de création de la base de données
+│   ├── .env                        Variables d'environnement (à créer)
+│   ├── .env.example                Modèle de configuration
+│   └── package.json
 └── frontend/
-    ├── chat.html
-    ├── connexion.html
+    ├── index.html                  Page d'accueil
+    ├── connexion.html              Inscription et connexion
+    ├── chat.html                   Interface principale
+    ├── admin.html                  Panneau de modération
+    ├── politique.html              Politique de confidentialité
+    ├── css/
+    │   ├── landing.css
+    │   ├── connexion.css
+    │   └── chat.css
     └── js/
+        ├── landing.js
+        ├── connexion.js
+        ├── chat.js
+        └── security.js
 ```
 
 ---
 
-## Étape 2 — Créer la base de données MySQL
+## Installation et configuration
 
-Tu as déjà MySQL installé. Maintenant on va créer la base de données du projet.
+### Étape 1 — Cloner le dépôt
 
-**Ouvre MySQL Workbench** (l'application MySQL avec l'interface graphique).
+Ouvre un terminal et exécute :
 
-Connecte-toi avec ton utilisateur root (ou celui que tu as créé lors de l'installation).
+```bash
+git clone https://github.com/mateo-079/trust_layer_HACKBYIFRI_2026
+cd trust_layer_HACKBYIFRI_2026
+```
 
-Une fois connecté, clique sur **File → Open SQL Script** et sélectionne le fichier `schema.sql` qui se trouve à la racine du dossier `backend/`.
 
-Ensuite clique sur l'**éclair ⚡** (ou Ctrl+Shift+Enter) pour exécuter le script.
+### Étape 2 — Installer les dépendances Node.js
 
-Tu dois voir apparaître 7 lignes vertes dans la zone "Action Output" en bas. Si c'est vert, la base de données est créée.
+```bash
+cd backend
+npm install
+```
 
-Maintenant crée l'utilisateur dédié au projet. Toujours dans Workbench, ouvre un nouvel onglet de requête et colle ces lignes :
+Cette commande lit le fichier `package.json` et installe automatiquement toutes les bibliothèques nécessaires dans un dossier `node_modules/`.
+
+### Étape 3 — Créer le fichier de configuration
+
+Le fichier `.env` contient les informations sensibles (mots de passe, clés secrètes). Il n'est pas versionné sur Git pour des raisons de sécurité. Tu dois le créer manuellement.
+
+Depuis le dossier `backend/`, copie le modèle :
+
+```bash
+# Sur Windows PowerShell
+Copy-Item .env.example .env
+
+# Sur Mac / Linux
+cp .env.example .env
+```
+
+Ouvre le fichier `.env` dans ton éditeur et remplis les valeurs. Voir la section [Variables d'environnement](#variables-denvironnement) pour le détail de chaque champ.
+
+---
+
+## Installation et configuration de MySQL
+
+Cette section explique comment installer MySQL, créer la base de données et la configurer pour Trust Layer. Suis les étapes dans l'ordre.
+
+### Étape 1 — Installer MySQL 8.0
+
+Télécharge MySQL Community Server depuis le site officiel :
+https://dev.mysql.com/downloads/mysql/
+
+Durant l'installation, note bien le mot de passe que tu définis pour l'utilisateur `root`. Tu en auras besoin ensuite.
+
+Une fois l'installation terminée, vérifie que MySQL est accessible depuis ton terminal. Sur Windows, il faut parfois ajouter MySQL au PATH manuellement.
+
+Pour trouver où MySQL est installé sur Windows, ouvre PowerShell et tape :
+
+```powershell
+Get-ChildItem -Path C:\ -Recurse -Filter "mysql.exe" -ErrorAction SilentlyContinue | Select-Object FullName
+```
+
+Tu verras un chemin comme `C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe`.
+
+Pour l'ajouter au PATH (à exécuter dans PowerShell en tant qu'administrateur) :
+
+```powershell
+[Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\MySQL\MySQL Server 8.0\bin", "Machine")
+```
+
+Ferme et rouvre PowerShell, puis vérifie :
+
+```bash
+mysql --version
+```
+
+Tu dois voir quelque chose comme : `mysql  Ver 8.0.xx for Win64`.
+
+### Étape 2 — Démarrer le service MySQL
+
+Sur Windows :
+
+```powershell
+# Depuis PowerShell en administrateur
+net start MySQL80
+```
+
+Sur Mac :
+
+```bash
+brew services start mysql
+```
+
+Sur Linux (Ubuntu/Debian) :
+
+```bash
+sudo systemctl start mysql
+```
+
+### Étape 3 — Se connecter à MySQL
+
+```bash
+mysql -u root -p
+```
+
+MySQL te demandera ton mot de passe root. Tape-le et appuie sur Entrée. Tu arrives dans le terminal MySQL, reconnaissable au prompt `mysql>`.
+
+### Étape 4 — Créer la base de données et les tables
+
+Depuis le terminal MySQL, exécute le script de création fourni avec le projet. Il crée la base `trustlayer` et ses 7 tables avec toutes les contraintes.
 
 ```sql
-CREATE DATABASE IF NOT EXISTS trustlayer CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'trustlayer_user'@'localhost' IDENTIFIED BY 'TrustLayer2026!';
+SOURCE /chemin/vers/trust-layer/backend/schema.sql
+```
+
+Remplace `/chemin/vers/trust-layer/` par le chemin réel sur ta machine. Sur Windows, utilise des slashes `/` et non des antislashes `\`.
+
+Exemple sur Windows :
+
+```sql
+SOURCE C:/Users/TonNom/Documents/trust-layer/backend/schema.sql
+```
+
+Tu dois voir plusieurs lignes `Query OK` défiler. À la fin, une requête de vérification s'exécute et affiche les 7 tables créées : `messages`, `moods`, `reactions`, `reports`, `revoked_tokens`, `salons`, `users`.
+
+### Étape 5 — Créer un utilisateur MySQL dédié (recommandé)
+
+Il est déconseillé d'utiliser le compte `root` pour ton application. Crée un utilisateur avec des permissions limitées :
+
+```sql
+CREATE USER 'trustlayer_user'@'localhost' IDENTIFIED BY 'ChoisisUnMotDePasseIci';
 GRANT SELECT, INSERT, UPDATE, DELETE ON trustlayer.* TO 'trustlayer_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-Exécute avec l'éclair ⚡. Si tu vois une erreur disant que l'utilisateur existe déjà, c'est bon — passe à l'étape suivante.
+Retiens le nom d'utilisateur et le mot de passe que tu viens de choisir.
 
----
+### Étape 6 — Vérifier que tout fonctionne
 
-## Étape 3 — Configurer le fichier `.env`
+Toujours dans le terminal MySQL, vérifie que les tables ont bien été créées :
 
-Le fichier `.env` contient les informations de connexion à ta base de données. Il n'est **pas partagé** par mesure de sécurité — tu dois le créer toi-même.
+```sql
+USE trustlayer;
+SHOW TABLES;
+```
 
-Dans le dossier `backend/`, tu trouveras un fichier appelé `.env.example`. Fais-en une copie et renomme-la `.env` (sans le `.example`).
+Tu dois voir :
 
-Ouvre ce fichier `.env` dans VS Code et remplis-le comme ceci :
+```
++----------------------+
+| Tables_in_trustlayer |
++----------------------+
+| messages             |
+| moods                |
+| reactions            |
+| reports              |
+| revoked_tokens       |
+| salons               |
+| users                |
++----------------------+
+```
 
-```dotenv
-NODE_ENV=development
-PORT=3000
-FRONTEND_URL=http://127.0.0.1:5500
+Quitte MySQL :
 
-JWT_SECRET=remplace_cette_valeur_par_une_longue_chaine_aleatoire
-JWT_EXPIRES_IN=7d
+```sql
+EXIT;
+```
 
-BCRYPT_ROUNDS=12
+### Étape 7 — Renseigner les informations MySQL dans le fichier .env
 
+Ouvre ton fichier `backend/.env` et remplis les variables MySQL avec les valeurs que tu viens de définir :
+
+```
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=trustlayer
 DB_USER=trustlayer_user
-DB_PASSWORD=TrustLayer2026!
-DB_CONNECTION_LIMIT=10
+DB_PASSWORD=ChoisisUnMotDePasseIci
 ```
 
-> ⚠️ **Important :** Pour le `JWT_SECRET`, génère une vraie valeur aléatoire. Ouvre un terminal dans le dossier `backend/` et tape :
-> ```bash
-> node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-> ```
-> Copie le résultat et colle-le comme valeur de `JWT_SECRET`.
+Si tu as choisi d'utiliser `root` directement (déconseillé en production) :
+
+```
+DB_USER=root
+DB_PASSWORD=TonMotDePasseRoot
+```
 
 ---
 
-## Étape 4 — Installer les dépendances Node.js
+## Lancer l'application
 
-Ouvre un terminal dans le dossier `backend/` (dans VS Code : Terminal → Nouveau terminal, assure-toi d'être dans le bon dossier).
+### Démarrer le backend
 
-Tape :
-```bash
-npm install
-```
-
-Tu verras plein de texte défiler — c'est normal. Attends que ça se termine (1 à 2 minutes). À la fin tu verras quelque chose comme `added 312 packages`.
-
----
-
-## Étape 5 — Démarrer MySQL
-
-> ⚠️ **À faire à chaque fois que tu redémarres ton ordinateur.**
-
-MySQL s'arrête quand tu étiens ton PC. Pour le relancer, ouvre **PowerShell en administrateur** (clic droit sur PowerShell → "Exécuter en tant qu'administrateur") et tape :
-
-```powershell
-net start MySQL80
-```
-
-Tu dois voir : `Le service MySQL80 a démarré.`
-
-Si tu vois `Le service a déjà été démarré`, c'est bon aussi.
-
----
-
-## Étape 6 — Démarrer le serveur backend
-
-Dans le terminal VS Code (toujours dans le dossier `backend/`), tape :
+Depuis le dossier `backend/` :
 
 ```bash
+# Mode développement (redémarrage automatique à chaque modification)
 npm run dev
+
+# Mode production
+npm start
 ```
 
-Si tout fonctionne, tu dois voir exactement ces deux lignes :
+Le backend démarre sur le port 3000. Tu dois voir dans le terminal :
 
 ```
 info: Serveur démarré {"port":3000,"env":"development"}
 info: Connexion MySQL établie {"host":"localhost","database":"trustlayer"}
 ```
 
-Si tu vois une erreur, relis les étapes 2, 3 et 5 — 99% du temps c'est MySQL qui n'est pas démarré ou le `.env` mal configuré.
+Si tu vois une erreur de connexion MySQL, vérifie que le service MySQL est bien démarré et que les variables dans `.env` sont correctes.
 
-> Le serveur tourne maintenant sur `http://localhost:3000`. **Laisse ce terminal ouvert** — si tu le fermes, le serveur s'arrête.
+### Démarrer le frontend
 
----
+Le frontend est composé de fichiers HTML statiques. Tu dois les servir depuis un serveur local, pas en ouvrant directement les fichiers dans le navigateur (les requêtes vers `localhost:3000` seraient bloquées par CORS).
 
-## Étape 7 — Ouvrir le frontend
+Avec l'extension Live Server de VS Code :
 
-Dans VS Code, ouvre le dossier `frontend/`. Fais un clic droit sur le fichier `connexion.html` et clique sur **"Open with Live Server"**.
+1. Ouvre le dossier `frontend/` dans VS Code
+2. Clic droit sur `index.html`
+3. Clique sur "Open with Live Server"
 
-Ton navigateur va s'ouvrir automatiquement sur `http://127.0.0.1:5500/frontend/connexion.html`.
+Le frontend s'ouvre sur `http://127.0.0.1:5500`.
 
-Tu peux maintenant créer un compte et tester le chat !
+Avec http-server (alternative) :
 
----
+```bash
+npm install -g http-server
+cd frontend
+http-server -p 5500
+```
 
-## Étape 8 — Tester que tout fonctionne
+### Accéder à l'application
 
-Pour confirmer que tout est bien branché :
+- Page d'accueil : http://127.0.0.1:5500/index.html
+- Connexion / Inscription : http://127.0.0.1:5500/connexion.html
+- Chat : http://127.0.0.1:5500/chat.html
+- Panneau admin : http://127.0.0.1:5500/admin.html (compte admin requis)
 
-1. Crée un compte via le formulaire d'inscription
-2. Connecte-toi — tu dois arriver sur la page de chat
-3. Envoie un message — il doit apparaître dans le chat
-4. Ouvre un **deuxième onglet**, connecte-toi avec un autre compte
-5. Envoie un message depuis l'un des onglets — il doit apparaître **instantanément** dans les deux onglets
+### Créer un compte administrateur
 
-Si le message apparaît en temps réel dans les deux onglets, **tout fonctionne parfaitement**.
+Après avoir créé un compte via l'interface, connecte-toi à MySQL et exécute :
 
----
+```bash
+mysql -u root -p trustlayer
+```
 
-## En cas de problème
+```sql
+-- Trouve ton ID
+SELECT id, username FROM users;
 
-**Le serveur ne démarre pas**
-→ Vérifie que MySQL est bien démarré (étape 5)
-→ Vérifie que ton `.env` est bien rempli (étape 3)
-→ Vérifie que tu es bien dans le dossier `backend/` dans le terminal
+-- Promouvois ton compte (remplace 1 par ton ID)
+UPDATE users SET is_admin = 1 WHERE id = 1;
 
-**"Cannot find module" au démarrage**
-→ Tu n'as pas fait `npm install` ou tu n'es pas dans le bon dossier
+EXIT;
+```
 
-**La page de chat s'ouvre mais les messages ne s'envoient pas**
-→ Vérifie que le serveur backend tourne (terminal avec les logs)
-→ Ouvre la console du navigateur (F12 → Console) et note l'erreur
-
-**Les messages ne s'affichent pas en temps réel**
-→ Vérifie que le script Socket.io est bien dans `chat.html`
-→ Ouvre F12 → Console et cherche une erreur WebSocket
-
-**Mot de passe MySQL oublié**
-→ Contacte l'équipe, ne touche pas à MySQL tout seul
+Reconnecte-toi sur l'application. Le bouton "Moderation" apparaîtra dans la sidebar du chat.
 
 ---
 
-## À retenir pour chaque session de dev
+## Variables d'environnement
 
-Chaque fois que tu veux travailler sur le projet :
+Voici le contenu complet du fichier `.env` à créer dans le dossier `backend/` :
 
-1. Ouvre PowerShell admin → `net start MySQL80`
-2. Dans VS Code, terminal dans `backend/` → `npm run dev`
-3. Clic droit sur `connexion.html` → Open with Live Server
-4. Travaille, teste, code
-5. Quand tu as fini, `Ctrl+C` dans le terminal pour arrêter le serveur
+```
+# Environnement
+NODE_ENV=development
+
+# Serveur
+PORT=3000
+
+# Base de données MySQL
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=trustlayer
+DB_USER=trustlayer_user
+DB_PASSWORD=ton_mot_de_passe
+DB_CONNECTION_LIMIT=10
+
+# JWT — clé secrète pour signer les tokens d'authentification
+# Génère une valeur aléatoire avec : node -e "require('crypto').randomBytes(64).toString('hex')" | Write-Output
+JWT_SECRET=remplace_par_une_longue_chaine_aleatoire
+JWT_EXPIRES_IN=7d
+
+# Frontend — URL autorisée par le CORS (adresse de ton Live Server)
+FRONTEND_URL=http://127.0.0.1:5500
+```
+
+Le champ `JWT_SECRET` doit être une chaîne aléatoire longue et unique. Pour en générer une depuis ton terminal :
+
+```bash
+node -e "const crypto = require('crypto'); console.log(crypto.randomBytes(64).toString('hex'));"
+```
+
+Copie la valeur affichée et colle-la dans ton `.env`.
 
 ---
 
-*Dernière mise à jour : 23 février 2026*
+## Equipe
+
+Student Compass Team — IFRI, Université d'Abomey-Calavi, Bénin.
+
+HACKBYIFRI 2026 — Thème : Integration efficace du numerique dans l'apprentissage.
