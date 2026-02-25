@@ -3,23 +3,23 @@
    ============================================= */
 
 :root {
-    --lavande:      #8B6FD4;
-    --lavande-light:#D4C5F9;
-    --lavande-deep: #5C3FB0;
-    --peche:        #FF9A6C;
-    --peche-light:  #FFD7BA;
-    --peche-deep:   #E07040;
-    --bleu:         #7FAEC7;
-    --bleu-light:   #C9D6DF;
-    --bleu-deep:    #3A6B8A;
-    --dark:         #1A2535;
-    --dark-mid:     #2C3E50;
-    --dark-soft:    #3D5166;
-    --cream:        #FAF8F4;
-    --cream-dark:   #F0EDE6;
-    --text-dark:    #1A2535;
-    --text-mid:     #4A5C6E;
-    --text-light:   #8A9BB0;
+    --lavande:      #4A7FC1;
+    --lavande-light:#C8DAFA;
+    --lavande-deep: #2D5A9E;
+    --peche:        #F4A261;
+    --peche-light:  #FAD5B0;
+    --peche-deep:   #D47C3A;
+    --bleu:         #4A7FC1;
+    --bleu-light:   #C8DAFA;
+    --bleu-deep:    #2D5A9E;
+    --dark:         #0F1D2E;
+    --dark-mid:     #1A2F4A;
+    --dark-soft:    #264870;
+    --cream:        #F6F9FD;
+    --cream-dark:   #E6EEFA;
+    --text-dark:    #0F1D2E;
+    --text-mid:     #2E4A68;
+    --text-light:   #6A8CAA;
 
     --font-display: 'Fraunces', Georgia, serif;
     --font-body:    'DM Sans', sans-serif;
@@ -27,8 +27,8 @@
     --radius-md:    18px;
     --radius-lg:    28px;
     --radius-full:  9999px;
-    --shadow-mid:   0 8px 40px rgba(26,37,53,0.15);
-    --shadow-hard:  0 16px 60px rgba(26,37,53,0.22);
+    --shadow-mid:   0 8px 40px rgba(15,29,46,0.15);
+    --shadow-hard:  0 16px 60px rgba(15,29,46,0.22);
 }
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -39,6 +39,7 @@ body {
     color: var(--text-dark);
     min-height: 100vh;
     overflow-x: hidden;
+    /* Pas de overflow-y hidden — la colonne droite doit pouvoir défiler */
 }
 
 /* ── Fond animé ── */
@@ -94,21 +95,30 @@ body {
 .back-link:hover { color: var(--lavande); }
 
 /* ── Layout principal ── */
+/* position: fixed sur .info-col → .main n'est plus une grille,
+   on utilise margin-left sur .form-col pour compenser */
 .main {
     position: relative;
     z-index: 1;
-    display: grid;
-    grid-template-columns: 1fr 1.3fr;
     min-height: 100vh;
 }
 
-/* ── Colonne info ── */
+/* ── Colonne info — FIXE ── */
+/* position: fixed : la colonne gauche est complètement sortie du flux normal.
+   Elle reste toujours visible, quelle que soit la position de scroll. */
 .info-col {
     background: var(--dark);
     padding: 4rem 3rem;
     display: flex;
     flex-direction: column;
     gap: 3rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 43.5%;   /* Équivalent à 1 / (1 + 1.3) de la largeur totale */
+    height: 100vh;
+    overflow: hidden;
+    z-index: 2;
 }
 
 .info-logo {
@@ -199,19 +209,36 @@ body {
     font-size: 0.88rem;
 }
 
+/* ── Colonne formulaire + terms-section ── */
+/* margin-left pousse le contenu à droite de la colonne fixe */
+.form-col,
+.terms-section {
+    margin-left: 43.5%;
+}
+
 /* ── Colonne formulaire ── */
 .form-col {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 3rem 2rem;
-    flex-direction: column;
     gap: 1rem;
+    min-height: 100vh;
+    width: 56.5%;           /* complément exact de l'info-col */
+    box-sizing: border-box; /* padding inclus dans la largeur */
+}
+
+/* Tous les éléments prennent toute la largeur disponible dans form-col */
+.auth-switch,
+.auth-panel,
+.form-card {
+    width: 100%;
+    max-width: 500px;
+    box-sizing: border-box;
 }
 
 .auth-switch {
-    width: 100%;
-    max-width: 480px;
     display: flex;
     gap: 0.4rem;
     background: var(--cream);
@@ -236,18 +263,16 @@ body {
 .switch-btn.active {
     background: var(--lavande);
     color: white;
-    box-shadow: 0 6px 20px rgba(139,111,212,0.25);
+    box-shadow: 0 6px 20px rgba(74,127,193,0.25);
 }
 
-.auth-panel { width: 100%; display: none; }
+.auth-panel { display: none; }
 .auth-panel.active { display: block; }
 
 .form-card {
     background: white;
     border-radius: var(--radius-lg);
     padding: 2.5rem;
-    width: 100%;
-    max-width: 480px;
     box-shadow: var(--shadow-hard);
     animation: slideIn 0.5s ease both;
 }
@@ -373,7 +398,7 @@ body {
     border-color: var(--lavande);
     background: var(--lavande-light);
     transform: scale(1.12);
-    box-shadow: 0 4px 16px rgba(139,111,212,0.30);
+    box-shadow: 0 4px 16px rgba(74,127,193,0.30);
 }
 
 /* ── Pseudo input ── */
@@ -428,7 +453,7 @@ body {
 
 #pseudo-input:focus {
     border-color: var(--lavande);
-    box-shadow: 0 0 0 4px rgba(139,111,212,0.12);
+    box-shadow: 0 0 0 4px rgba(74,127,193,0.12);
 }
 
 .random-btn {
@@ -499,7 +524,7 @@ body {
 
 .field input:focus {
     border-color: var(--lavande);
-    box-shadow: 0 0 0 4px rgba(139,111,212,0.12);
+    box-shadow: 0 0 0 4px rgba(74,127,193,0.12);
 }
 
 .field.full { grid-column: 1 / -1; }
@@ -558,7 +583,7 @@ body {
     border: none;
     border-radius: var(--radius-full);
     cursor: pointer;
-    box-shadow: 0 6px 20px rgba(139,111,212,0.35);
+    box-shadow: 0 6px 20px rgba(74,127,193,0.35);
     transition: all 0.2s;
 }
 
@@ -572,7 +597,7 @@ body {
 .btn-next:not(:disabled):hover {
     background: var(--lavande-deep);
     transform: translateY(-2px);
-    box-shadow: 0 10px 28px rgba(139,111,212,0.40);
+    box-shadow: 0 10px 28px rgba(74,127,193,0.40);
 }
 
 .btn-enter {
@@ -591,7 +616,7 @@ body {
     text-decoration: none;
     border: none;
     cursor: pointer;
-    box-shadow: 0 6px 20px rgba(139,111,212,0.35);
+    box-shadow: 0 6px 20px rgba(74,127,193,0.35);
     transition: all 0.2s;
 }
 
@@ -702,9 +727,7 @@ body {
 
 /* -- Terms sections -- */
 .terms-section {
-    max-width: 900px;
-    margin: 2.5rem auto 0;
-    padding: 0 2rem 2rem;
+    padding: 2rem 2rem 3rem;
     color: var(--text-mid);
 }
 
@@ -722,9 +745,24 @@ body {
 
 /* ── Responsive ── */
 @media (max-width: 800px) {
-    .main { grid-template-columns: 1fr; }
-    .info-col { padding: 4rem 2rem 2rem; min-height: auto; }
-    .form-col { padding: 2rem 1.5rem; }
+    .info-col {
+        position: static;
+        width: 100%;
+        height: auto;
+        overflow: visible;
+        padding: 4rem 2rem 2rem;
+        min-height: auto;
+    }
+    .form-col,
+    .terms-section {
+        margin-left: 0;
+    }
+    .form-col {
+        width: 100%;
+        margin-left: 0;
+        min-height: auto;
+        padding: 2rem 1.5rem;
+    }
     .form-card { padding: 2rem 1.5rem; }
     .form-grid { grid-template-columns: 1fr; }
 }

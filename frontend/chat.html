@@ -95,6 +95,10 @@
             <span class="nav-icon">🌬️</span>
             <span>Exercice de respiration</span>
         </button>
+        <button class="nav-item" onclick="openPanel('humeur')">
+            <span class="nav-icon">📈</span>
+            <span>Mon évolution d'humeur</span>
+        </button>
         <button class="nav-item" onclick="openPanel('conseils')">
             <span class="nav-icon">📖</span>
             <span>Conseils bien-être</span>
@@ -106,8 +110,9 @@
     </nav>
 
     <div class="sidebar-footer">
-        <!-- Redirige vers connexion.html — côté backend, la session devra être invalidée -->
-        <a href="connexion.html" class="exit-link">Changer d'identité</a>
+        <button class="btn-logout" onclick="logout()">
+            <span></span> Se déconnecter
+        </button>
     </div>
 </aside>
 

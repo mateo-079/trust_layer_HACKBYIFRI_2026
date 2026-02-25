@@ -99,6 +99,9 @@ function initSocket() {
 
     socket.on('connect', () => {
         console.log('WebSocket connecté :', socket.id);
+        // Initialiser le badge immédiatement — on est au moins 1 connecté
+        const badge = document.getElementById('online-count');
+        if (badge && badge.textContent === '—') badge.textContent = '1';
     });
 
     socket.on('disconnect', (reason) => {
@@ -149,14 +152,14 @@ function initSocket() {
         if (bar) bar.textContent = `${username} est en train d'écrire...`;
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
-            if (bar) bar.textContent = `Anonyme · Respecte les autres · En cas d'urgence : 166 ou 51 04 00 00 (SAMU)`;
+            if (bar) bar.textContent = `Anonyme · Respecte les autres · En cas d'urgence : 166 · SAMU : 13`;
         }, 2000);
     });
 
     socket.on('user_stop_typing', () => {
         clearTimeout(typingTimeout);
         const bar = document.querySelector('.input-hint-bar');
-        if (bar) bar.textContent = `Anonyme · Respecte les autres · En cas d'urgence : 166 ou 51 04 00 00 (SAMU)`;
+        if (bar) bar.textContent = `Anonyme · Respecte les autres · En cas d'urgence : 166 · SAMU : 13`;
     });
 
     // ── Message supprimé ───────────────────────────────────────────────────────
@@ -408,11 +411,20 @@ function initMoodSlider() {
         val.textContent = safe;
         state.mood      = safe;
 
+        // Couleur active qui évolue selon l'humeur :
+        // 1-3 → orange (difficulté)  4-6 → bleu (neutre)  7-10 → vert (bien)
+        const activeColor = safe <= 3 ? '#F4A261'
+                          : safe <= 6 ? '#4A7FC1'
+                          :             '#4CAF50';
+
         const pct = ((safe - 1) / 9) * 100;
         slider.style.background = `linear-gradient(to right,
-            #8B6FD4 0%, #8B6FD4 ${pct}%,
+            ${activeColor} 0%, ${activeColor} ${pct}%,
             rgba(255,255,255,0.15) ${pct}%, rgba(255,255,255,0.15) 100%)`;
     });
+
+    // Initialiser le dégradé au chargement avec la valeur par défaut (5)
+    slider.dispatchEvent(new Event('input'));
 }
 
 // Envoie le score d'humeur au backend, puis recharge l'historique.
@@ -455,14 +467,21 @@ function renderMoodHistory() {
     const container = document.getElementById('mood-history');
     container.innerHTML = '';
 
-    state.moodHistory.slice(0, 5).forEach(entry => {
-        const emoji = entry.score >= 7 ? '😊' : entry.score >= 4 ? '😐' : '😢';
-        const tag   = document.createElement('div');
-        tag.className   = 'mood-tag';
-        const dateLabel = entry.date || formatDate(entry.created_at);
-        tag.textContent = `${emoji} ${entry.score}/10 · ${escHtml(dateLabel)}`;
-        container.appendChild(tag);
-    });
+    // On n'affiche que la dernière entrée — juste un flash de confirmation
+    const last = state.moodHistory[0];
+    if (!last) return;
+
+    const emoji = last.score >= 7 ? '😊' : last.score >= 4 ? '😐' : '😢';
+    const tag   = document.createElement('div');
+    tag.className   = 'mood-tag mood-tag-flash';
+    tag.textContent = `${emoji} ${last.score}/10 enregistré`;
+    container.appendChild(tag);
+
+    // Disparaît après 3 secondes avec un fade-out
+    setTimeout(() => {
+        tag.classList.add('mood-tag-fade');
+        setTimeout(() => { container.innerHTML = ''; }, 600);
+    }, 3000);
 }
 
 // Retour visuel sur le bouton "Enregistrer" après sauvegarde réussie.
@@ -560,10 +579,16 @@ async function sendMessage() {
 
 // Crée et insère un bloc message dans la zone de chat.
 // Tout contenu venant du serveur est échappé avant insertion — protection XSS.
-function appendMessage({ av, name, text, isOwn, time }) {
+function appendMessage({ id, av, name, text, isOwn, time }) {
     const wrap = document.getElementById('messages-wrap');
     const row  = document.createElement('div');
     row.className = `msg-row${isOwn ? ' own' : ''}`;
+    if (id) row.dataset.messageId = id;
+
+    // Menu contextuel — différent selon si c'est son propre message
+    const menuItems = isOwn
+        ? `<button class="msg-menu-item danger" onclick="deleteMsg(this)">🗑️ Supprimer</button>`
+        : `<button class="msg-menu-item danger" onclick="openReportModal(this)">🚩 Signaler ce message</button>`;
 
     row.innerHTML = `
         <div class="msg-av-wrap">${escHtml(av)}</div>
@@ -575,7 +600,11 @@ function appendMessage({ av, name, text, isOwn, time }) {
             <div class="msg-bubble">${escHtml(text)}</div>
             <div class="msg-actions">
                 <button class="react-btn" onclick="reactMsg(this)">🤍</button>
-                <button class="report-btn" title="Signaler">⋯</button>
+                <span class="react-count"></span>
+                <button class="report-btn" onclick="toggleMsgMenu(this)" title="Options">⋯</button>
+                <div class="msg-menu">
+                    ${menuItems}
+                </div>
             </div>
         </div>`;
 
@@ -678,36 +707,301 @@ const PANELS = {
             <div class="conseil-card"><h4>Écris ce que tu ressens</h4><p>5 lignes par jour dans un journal aide à libérer les émotions.</p></div>
             <div class="conseil-card"><h4>Demander de l'aide, c'est courageux</h4><p>Parler à quelqu'un de confiance est une force, pas une faiblesse.</p></div>`
     },
+    humeur: {
+        title: 'Mon évolution d\'humeur',
+        html: `
+            <p class="rp-intro">Visualise comment ton humeur évolue dans le temps. Chaque point représente une entrée que tu as enregistrée.</p>
+
+            <div class="mood-chart-controls">
+                <button class="mood-period-btn active" data-days="7" onclick="switchMoodPeriod(7, this)">7 jours</button>
+                <button class="mood-period-btn" data-days="30" onclick="switchMoodPeriod(30, this)">30 jours</button>
+            </div>
+
+            <div class="mood-chart-wrap">
+                <svg id="mood-svg" width="100%" height="200" viewBox="0 0 320 200" preserveAspectRatio="none"></svg>
+                <div class="mood-chart-empty" id="mood-chart-empty" style="display:none">
+                    <span>📊</span>
+                    <p>Pas encore assez de données.<br>Continue à noter ton humeur !</p>
+                </div>
+            </div>
+
+            <div class="mood-chart-legend">
+                <span class="legend-item bad">😢 1–3</span>
+                <span class="legend-item mid">😐 4–6</span>
+                <span class="legend-item good">😊 7–10</span>
+            </div>
+
+            <div class="mood-stats" id="mood-stats"></div>
+
+            <div class="mood-entries-list" id="mood-entries-list"></div>`
+    },
     urgence: {
         title: "Contacts d'urgence",
         html: `
-            <p class="rp-intro">Si tu traverses une période très difficile, des personnes formées sont disponibles pour t'aider.</p>
-            <div class="urgence-card red"><h4>Urgences sanitaires et sécuritaires — Bénin</h4><span class="urgence-num">166</span><p>Numéro national d'urgence béninois. Disponible 24h/24, 7j/7.</p></div>
-            <div class="urgence-card blue"><h4>SAMU — Cotonou</h4><span class="urgence-num">51 04 00 00</span><p>Service d'aide médicale urgente. Pour toute urgence médicale grave.</p></div>
-            <div class="urgence-card blue"><h4>Centre Psychiatrique de Jacquot — Cotonou</h4><span class="urgence-num">21 30 10 44</span><p>Centre spécialisé en santé mentale. Pour une orientation ou un soutien psychologique.</p></div>
-            <div class="urgence-card blue"><h4>Pompiers</h4><span class="urgence-num">118</span><p>Pour toute situation de péril ou accident nécessitant une intervention rapide.</p></div>
-            <div class="urgence-card blue"><h4>Police Secours</h4><span class="urgence-num">117</span><p>En cas de danger, d'agression ou de menace pour ta sécurité.</p></div>
-            <div class="conseil-card" style="margin-top:1rem"><h4>N'oublie pas</h4><p>Tu peux aussi continuer à parler ici — la communauté est là pour toi.</p></div>`
+            <p class="rp-intro">Si tu traverses une période très difficile, des personnes formées sont disponibles pour t'aider. Ces numéros sont gratuits et disponibles 24h/24.</p>
+
+            <div class="urgence-section-title red">🔴 Urgences vitales</div>
+
+            <div class="urgence-card red">
+                <div class="urgence-header">
+                    <span class="urgence-icon">🚨</span>
+                    <h4>Numéro d'Urgence National</h4>
+                </div>
+                <a class="urgence-num" href="tel:166">166</a>
+                <p>Numéro unique au Bénin — gratuit, disponible 24h/24, 7j/7.</p>
+            </div>
+
+            <div class="urgence-card red">
+                <div class="urgence-header">
+                    <span class="urgence-icon">🏥</span>
+                    <h4>SAMU</h4>
+                </div>
+                <a class="urgence-num" href="tel:+22901683000 00">+229 01 68 30 00 00</a>
+                <p>Urgences médicales et psychiatriques.</p>
+            </div>
+
+            <div class="urgence-section-title blue">🔵 Sécurité</div>
+
+            <div class="urgence-card blue">
+                <div class="urgence-header">
+                    <span class="urgence-icon">🚔</span>
+                    <h4>Police Secours</h4>
+                </div>
+                <a class="urgence-num" href="tel:117">117</a>
+                <p>En cas de danger, d'agression ou de menace pour ta sécurité.</p>
+            </div>
+
+            <div class="urgence-card blue">
+                <div class="urgence-header">
+                    <span class="urgence-icon">🚒</span>
+                    <h4>Sapeurs-Pompiers</h4>
+                </div>
+                <a class="urgence-num" href="tel:118">118</a>
+                <p>Incendie, accident, situation de péril.</p>
+            </div>
+
+            <div class="urgence-section-title green">🟢 Ressources locales</div>
+
+            <div class="urgence-card green">
+                <div class="urgence-header">
+                    <span class="urgence-icon">🏨</span>
+                    <h4>CNHU Cotonou</h4>
+                </div>
+                <a class="urgence-num" href="tel:+22901213006 56">+229 01 21 30 06 56</a>
+                <p>Centre National Hospitalier et Universitaire — urgences 24h/24.</p>
+            </div>
+
+            <div class="urgence-card green">
+                <div class="urgence-header">
+                    <span class="urgence-icon">🎓</span>
+                    <h4>Cellule d'écoute UAC</h4>
+                </div>
+                <a class="urgence-num" href="tel:+22902213600 74">+229 02 21 36 00 74</a>
+                <p>Soutien psychologique à l'Université d'Abomey-Calavi — spécifique aux étudiant(e)s.</p>
+            </div>`
     }
 };
 
 // Ouvre le panneau correspondant à la clé fournie.
 // La clé est validée contre la liste blanche ALLOWED pour éviter tout abus.
 function openPanel(key) {
-    const ALLOWED = ['breathing', 'conseils', 'urgence'];
+    const ALLOWED = ['breathing', 'conseils', 'urgence', 'humeur'];
     if (!ALLOWED.includes(key)) return;
 
-    const panel = PANELS[key];
-    document.getElementById('rp-title').textContent   = panel.title;
-    document.getElementById('rp-content').innerHTML   = panel.html; // HTML statique — sûr
+    stopBreathing();
+
+    const panel   = PANELS[key];
+    const content = document.getElementById('rp-content');
+    content.innerHTML = '';
+
+    document.getElementById('rp-title').textContent = panel.title;
+    content.innerHTML = panel.html;
+
     document.getElementById('resource-panel').classList.add('open');
     document.getElementById('resource-overlay').classList.add('show');
+
+    // Initialiser le graphique après injection du HTML
+    if (key === 'humeur') initMoodChart();
 }
 
 function closePanel() {
     document.getElementById('resource-panel').classList.remove('open');
     document.getElementById('resource-overlay').classList.remove('show');
     stopBreathing();
+}
+
+
+// -----------------------------------------------------------------------------
+// GRAPHIQUE D'HUMEUR
+// Courbe SVG dessinée en JS pur — pas de librairie externe.
+// Points colorés selon le score (rouge/bleu/vert) + courbe lissée + stats.
+// -----------------------------------------------------------------------------
+let moodChartDays = 7; // période active
+
+function initMoodChart() {
+    moodChartDays = 7;
+    renderMoodChart();
+}
+
+function switchMoodPeriod(days, btn) {
+    moodChartDays = days;
+    document.querySelectorAll('.mood-period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderMoodChart();
+}
+
+function renderMoodChart() {
+    const svg       = document.getElementById('mood-svg');
+    const emptyMsg  = document.getElementById('mood-chart-empty');
+    const statsCont = document.getElementById('mood-stats');
+    const listCont  = document.getElementById('mood-entries-list');
+    if (!svg) return;
+
+    // Filtrer les entrées selon la période choisie
+    const cutoff = Date.now() - moodChartDays * 24 * 60 * 60 * 1000;
+    const entries = (state.moodHistory || [])
+        .filter(e => new Date(e.created_at || e.date).getTime() >= cutoff)
+        .sort((a, b) => new Date(a.created_at || a.date) - new Date(b.created_at || b.date));
+
+    svg.innerHTML = '';
+
+    if (entries.length < 2) {
+        svg.style.display  = 'none';
+        emptyMsg.style.display = 'flex';
+        statsCont.innerHTML = '';
+        listCont.innerHTML  = '';
+        return;
+    }
+
+    svg.style.display  = 'block';
+    emptyMsg.style.display = 'none';
+
+    // Dimensions SVG (viewBox 320×200)
+    const W = 320, H = 200;
+    const padL = 28, padR = 12, padT = 16, padB = 28;
+    const chartW = W - padL - padR;
+    const chartH = H - padT - padB;
+
+    // Couleur selon le score
+    const scoreColor = s => s <= 3 ? '#F4A261' : s <= 6 ? '#4A7FC1' : '#4CAF50';
+
+    // Coordonnées de chaque point
+    const pts = entries.map((e, i) => ({
+        x: padL + (i / (entries.length - 1)) * chartW,
+        y: padT + chartH - ((e.score - 1) / 9) * chartH,
+        score: e.score,
+        date: e.created_at || e.date,
+    }));
+
+    // ── Zones colorées de fond (1-3 / 4-6 / 7-10) ──────────────────────────
+    const zones = [
+        { yTop: padT,                                  yBot: padT + chartH * (3/9), fill: 'rgba(76,175,80,0.06)'  }, // 7-10
+        { yTop: padT + chartH * (3/9),                yBot: padT + chartH * (6/9), fill: 'rgba(74,127,193,0.06)' }, // 4-6
+        { yTop: padT + chartH * (6/9),                yBot: padT + chartH,         fill: 'rgba(244,162,97,0.06)'  }, // 1-3
+    ];
+    zones.forEach(z => {
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', padL);
+        rect.setAttribute('y', z.yTop);
+        rect.setAttribute('width', chartW);
+        rect.setAttribute('height', z.yBot - z.yTop);
+        rect.setAttribute('fill', z.fill);
+        svg.appendChild(rect);
+    });
+
+    // ── Lignes de grille horizontales (niveaux 2, 5, 8) ─────────────────────
+    [2, 5, 8].forEach(lvl => {
+        const y = padT + chartH - ((lvl - 1) / 9) * chartH;
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', padL); line.setAttribute('x2', W - padR);
+        line.setAttribute('y1', y);    line.setAttribute('y2', y);
+        line.setAttribute('stroke', 'rgba(15,29,46,0.07)');
+        line.setAttribute('stroke-dasharray', '3,3');
+        svg.appendChild(line);
+
+        // Label gauche
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', padL - 4); txt.setAttribute('y', y + 4);
+        txt.setAttribute('text-anchor', 'end');
+        txt.setAttribute('font-size', '9');
+        txt.setAttribute('fill', '#6A8CAA');
+        txt.textContent = lvl;
+        svg.appendChild(txt);
+    });
+
+    // ── Courbe lissée (cubic bezier) ─────────────────────────────────────────
+    let d = `M ${pts[0].x} ${pts[0].y}`;
+    for (let i = 1; i < pts.length; i++) {
+        const cp1x = (pts[i-1].x + pts[i].x) / 2;
+        d += ` C ${cp1x} ${pts[i-1].y}, ${cp1x} ${pts[i].y}, ${pts[i].x} ${pts[i].y}`;
+    }
+
+    // Zone remplie sous la courbe
+    const fillPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    fillPath.setAttribute('d', d + ` L ${pts[pts.length-1].x} ${padT+chartH} L ${pts[0].x} ${padT+chartH} Z`);
+    fillPath.setAttribute('fill', 'rgba(74,127,193,0.08)');
+    svg.appendChild(fillPath);
+
+    // Ligne de la courbe
+    const curvePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    curvePath.setAttribute('d', d);
+    curvePath.setAttribute('fill', 'none');
+    curvePath.setAttribute('stroke', '#4A7FC1');
+    curvePath.setAttribute('stroke-width', '2');
+    curvePath.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(curvePath);
+
+    // ── Points colorés ───────────────────────────────────────────────────────
+    pts.forEach(pt => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', pt.x);
+        circle.setAttribute('cy', pt.y);
+        circle.setAttribute('r', '5');
+        circle.setAttribute('fill', scoreColor(pt.score));
+        circle.setAttribute('stroke', 'white');
+        circle.setAttribute('stroke-width', '2');
+        svg.appendChild(circle);
+    });
+
+    // ── Étiquettes de dates (première et dernière) ───────────────────────────
+    [[pts[0], 'start'], [pts[pts.length-1], 'end']].forEach(([pt, anchor]) => {
+        const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        lbl.setAttribute('x', pt.x);
+        lbl.setAttribute('y', H - 4);
+        lbl.setAttribute('text-anchor', anchor === 'start' ? 'start' : 'end');
+        lbl.setAttribute('font-size', '9');
+        lbl.setAttribute('fill', '#6A8CAA');
+        lbl.textContent = new Date(pt.date).toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+        svg.appendChild(lbl);
+    });
+
+    // ── Statistiques ─────────────────────────────────────────────────────────
+    const scores  = entries.map(e => e.score);
+    const avg     = (scores.reduce((s, v) => s + v, 0) / scores.length).toFixed(1);
+    const min     = Math.min(...scores);
+    const max     = Math.max(...scores);
+    const trend   = scores[scores.length-1] - scores[0];
+    const trendTxt = trend > 0 ? `↑ +${trend}` : trend < 0 ? `↓ ${trend}` : '→ stable';
+    const trendCls = trend > 0 ? 'good' : trend < 0 ? 'bad' : 'mid';
+
+    statsCont.innerHTML = `
+        <div class="mood-stat"><span class="stat-label">Moyenne</span><span class="stat-val">${avg}/10</span></div>
+        <div class="mood-stat"><span class="stat-label">Min</span><span class="stat-val bad-text">${min}/10</span></div>
+        <div class="mood-stat"><span class="stat-label">Max</span><span class="stat-val good-text">${max}/10</span></div>
+        <div class="mood-stat"><span class="stat-label">Tendance</span><span class="stat-val ${trendCls}-text">${trendTxt}</span></div>`;
+
+    // ── Liste des 5 dernières entrées ─────────────────────────────────────────
+    const recent = [...entries].reverse().slice(0, 5);
+    listCont.innerHTML = `<div class="mood-entries-title">Dernières entrées</div>` +
+        recent.map(e => {
+            const emoji = e.score >= 7 ? '😊' : e.score >= 4 ? '😐' : '😢';
+            const d     = new Date(e.created_at || e.date).toLocaleDateString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+            return `<div class="mood-entry-row">
+                <span class="entry-emoji">${emoji}</span>
+                <span class="entry-score" style="color:${scoreColor(e.score)}">${e.score}/10</span>
+                <span class="entry-date">${d}</span>
+            </div>`;
+        }).join('');
 }
 
 
@@ -755,4 +1049,160 @@ function stopBreathing() {
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('sidebar-overlay').classList.toggle('show');
+}
+
+// -----------------------------------------------------------------------------
+// DÉCONNEXION
+// Efface la session et redirige vers la page de connexion.
+// -----------------------------------------------------------------------------
+function logout() {
+    sessionStorage.clear();
+    localStorage.removeItem('tl_token');
+    localStorage.removeItem('tl_user_id');
+    window.location.href = 'connexion.html';
+}
+
+
+// -----------------------------------------------------------------------------
+// MENU CONTEXTUEL DES MESSAGES
+// Ouverture/fermeture du menu ⋯ sous chaque message.
+// Un seul menu peut être ouvert à la fois.
+// -----------------------------------------------------------------------------
+function toggleMsgMenu(btn) {
+    const menu = btn.nextElementSibling;
+    const isOpen = menu.classList.contains('open');
+
+    // Fermer tous les menus ouverts
+    document.querySelectorAll('.msg-menu.open').forEach(m => m.classList.remove('open'));
+
+    if (!isOpen) {
+        menu.classList.add('open');
+
+        // Fermer au clic ailleurs dans la page
+        setTimeout(() => {
+            document.addEventListener('click', function closeMenu(e) {
+                if (!menu.contains(e.target) && e.target !== btn) {
+                    menu.classList.remove('open');
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
+        }, 10);
+    }
+}
+
+
+// -----------------------------------------------------------------------------
+// SUPPRESSION D'UN MESSAGE (propre)
+// Soft delete — le message est masqué côté client, supprimé en base via l'API.
+// -----------------------------------------------------------------------------
+async function deleteMsg(btn) {
+    const row = btn.closest('.msg-row');
+    const messageId = row?.dataset.messageId;
+    if (!messageId) return;
+
+    // Fermer le menu
+    btn.closest('.msg-menu').classList.remove('open');
+
+    if (!confirm('Supprimer ce message ?')) return;
+
+    try {
+        await apiRequest(`/messages/${messageId}`, { method: 'DELETE' });
+        row.style.opacity = '0';
+        row.style.transition = 'opacity 0.3s';
+        setTimeout(() => row.remove(), 300);
+    } catch {
+        showInputError('Impossible de supprimer le message.');
+    }
+}
+
+
+// -----------------------------------------------------------------------------
+// SIGNALEMENT D'UN MESSAGE
+// Ouvre une modale de confirmation avec choix de la raison.
+// Le backend insère un enregistrement dans la table `reports`.
+// Les modérateurs pourront consulter les signalements dans un panneau dédié.
+// -----------------------------------------------------------------------------
+let reportTargetRow = null;
+
+function openReportModal(btn) {
+    const menu = btn.closest('.msg-menu');
+    menu.classList.remove('open');
+    reportTargetRow = btn.closest('.msg-row');
+
+    // Créer ou réutiliser la modale
+    let modal = document.getElementById('report-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'report-modal';
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="report-title">
+                <h3 id="report-title">🚩 Signaler un message</h3>
+                <p>Pourquoi signales-tu ce message ? Ton signalement est anonyme et sera examiné par l'équipe.</p>
+                <div class="report-reasons">
+                    <button class="report-reason" data-reason="harcèlement">😔 Harcèlement ou intimidation</button>
+                    <button class="report-reason" data-reason="contenu offensant">🤬 Contenu offensant ou haineux</button>
+                    <button class="report-reason" data-reason="crise">🆘 Je pense que cette personne est en danger</button>
+                    <button class="report-reason" data-reason="spam">🤖 Spam ou contenu inapproprié</button>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closeReportModal()">Annuler</button>
+                    <button class="btn-report-submit" id="submit-report" disabled onclick="submitReport()">Signaler</button>
+                </div>
+            </div>`;
+
+        // Sélection de la raison
+        modal.querySelectorAll('.report-reason').forEach(btn => {
+            btn.addEventListener('click', () => {
+                modal.querySelectorAll('.report-reason').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                document.getElementById('submit-report').disabled = false;
+            });
+        });
+
+        // Fermer en cliquant l'overlay
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeReportModal();
+        });
+
+        document.body.appendChild(modal);
+    }
+
+    // Réinitialiser
+    modal.querySelectorAll('.report-reason').forEach(b => b.classList.remove('selected'));
+    document.getElementById('submit-report').disabled = true;
+    modal.classList.add('open');
+}
+
+function closeReportModal() {
+    const modal = document.getElementById('report-modal');
+    if (modal) modal.classList.remove('open');
+    reportTargetRow = null;
+}
+
+async function submitReport() {
+    const modal = document.getElementById('report-modal');
+    const selected = modal.querySelector('.report-reason.selected');
+    if (!selected || !reportTargetRow) return;
+
+    const messageId = reportTargetRow.dataset.messageId;
+    const reason = selected.dataset.reason;
+
+    const submitBtn = document.getElementById('submit-report');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Envoi...';
+
+    try {
+        await apiRequest(`/messages/${messageId}/report`, {
+            method: 'POST',
+            body: JSON.stringify({ reason })
+        });
+
+        closeReportModal();
+        showInputError('✅ Signalement envoyé. Merci de veiller à la communauté.');
+    } catch {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Signaler';
+        showInputError("Impossible d'envoyer le signalement.");
+    }
 }

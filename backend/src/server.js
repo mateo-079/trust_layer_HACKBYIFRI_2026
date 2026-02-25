@@ -75,6 +75,7 @@ app.use('/api',          require('./routes/routes_auth'));
 app.use('/api',          require('./routes/routes_profile'));
 app.use('/api/messages', require('./routes/routes_messages'));
 app.use('/api/moods',    require('./routes/routes_moods'));
+app.use('/api/admin',    require('./routes/routes_admin'));
 
 
 // ── Health check ──────────────────────────────────────────────────────────────

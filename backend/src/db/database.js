@@ -112,7 +112,7 @@ const db = {
    */
   async findUserById(id) {
     const [rows] = await pool.execute(
-      'SELECT id, username, email, avatar, first_name, last_name, is_banned, created_at FROM users WHERE id = ? LIMIT 1',
+      'SELECT id, username, email, avatar, first_name, last_name, is_banned, is_admin, created_at FROM users WHERE id = ? LIMIT 1',
       [id]
     );
     return rows[0] || null;

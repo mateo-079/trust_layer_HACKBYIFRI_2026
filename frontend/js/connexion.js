@@ -455,6 +455,14 @@ function goToStep(n) {
 
         const emergencyParts = [profile.emergencyName, profile.emergencyPhone].filter(Boolean);
         document.getElementById('conf-emergency').textContent    = emergencyParts.length ? emergencyParts.join(' - ') : '—';
+
+        // Scroll doux vers la card pour centrer le récap dans la vue
+        requestAnimationFrame(() => {
+            const card = document.querySelector('#step-3')?.closest('.form-card');
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
     }
 
     currentStep = n;

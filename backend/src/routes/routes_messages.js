@@ -85,6 +85,62 @@ router.post('/:id/react', authenticate, async (req, res) => {
 });
 
 
+// ── POST /api/messages/:id/report ────────────────────────────────────────────
+// Signale un message à l'équipe de modération.
+// Règles :
+//   - On ne peut pas signaler son propre message
+//   - La contrainte UNIQUE(reporter_id, message_id) en base empêche les doublons
+//   - La raison est optionnelle mais validée côté frontend
+router.post('/:id/report', authenticate, async (req, res) => {
+  const messageId = parseInt(req.params.id);
+  const { reason } = req.body;
+
+  if (!messageId || messageId < 1) {
+    return res.status(400).json({ error: 'ID message invalide' });
+  }
+
+  // Valider la raison contre une liste blanche
+  const ALLOWED_REASONS = ['harcèlement', 'contenu offensant', 'crise', 'spam'];
+  if (reason && !ALLOWED_REASONS.includes(reason)) {
+    return res.status(400).json({ error: 'Raison invalide' });
+  }
+
+  try {
+    // Vérifier que le message existe et n'est pas le sien
+    const [rows] = await db.pool.execute(
+      'SELECT user_id FROM messages WHERE id = ? AND deleted_at IS NULL LIMIT 1',
+      [messageId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Message introuvable' });
+    }
+
+    if (rows[0].user_id === req.user.id) {
+      return res.status(403).json({ error: 'Tu ne peux pas signaler ton propre message' });
+    }
+
+    await db.createReport(req.user.id, messageId, reason || null);
+
+    logger.warn('Message signalé', {
+      messageId,
+      reporterId: req.user.id,
+      reason: reason || 'non précisée',
+    });
+
+    res.status(201).json({ success: true, message: 'Signalement enregistré' });
+
+  } catch (err) {
+    // Erreur duplicate key = déjà signalé par cet utilisateur
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ error: 'Tu as déjà signalé ce message' });
+    }
+    logger.error('Erreur signalement', { error: err.message });
+    res.status(500).json({ error: 'Erreur interne du serveur' });
+  }
+});
+
+
 // ── DELETE /api/messages/:id ──────────────────────────────────────────────────
 router.delete('/:id', authenticate, async (req, res) => {
   const messageId = parseInt(req.params.id);

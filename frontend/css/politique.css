@@ -3,23 +3,23 @@
    ============================================= */
 
 :root {
-    --lavande:      #8B6FD4;
-    --lavande-light:#D4C5F9;
-    --lavande-deep: #5C3FB0;
-    --peche:        #FF9A6C;
-    --peche-light:  #FFD7BA;
-    --peche-deep:   #E07040;
-    --bleu:         #7FAEC7;
-    --bleu-light:   #C9D6DF;
-    --bleu-deep:    #3A6B8A;
-    --dark:         #1A2535;
-    --dark-mid:     #2C3E50;
-    --dark-soft:    #3D5166;
-    --cream:        #FAF8F4;
-    --cream-dark:   #F0EDE6;
-    --text-dark:    #1A2535;
-    --text-mid:     #4A5C6E;
-    --text-light:   #8A9BB0;
+    --lavande:      #4A7FC1;
+    --lavande-light:#C8DAFA;
+    --lavande-deep: #2D5A9E;
+    --peche:        #F4A261;
+    --peche-light:  #FAD5B0;
+    --peche-deep:   #D47C3A;
+    --bleu:         #4A7FC1;
+    --bleu-light:   #C8DAFA;
+    --bleu-deep:    #2D5A9E;
+    --dark:         #0F1D2E;
+    --dark-mid:     #1A2F4A;
+    --dark-soft:    #264870;
+    --cream:        #F6F9FD;
+    --cream-dark:   #E6EEFA;
+    --text-dark:    #0F1D2E;
+    --text-mid:     #2E4A68;
+    --text-light:   #6A8CAA;
     --white:        #FFFFFF;
     --success:      #4CAF50;
     --warning:      #F4A460;
@@ -33,9 +33,9 @@
     --radius-lg:  24px;
     --radius-full:9999px;
 
-    --shadow-sm: 0 2px 8px rgba(26,37,53,0.08);
-    --shadow-md: 0 4px 16px rgba(26,37,53,0.12);
-    --shadow-lg: 0 8px 32px rgba(26,37,53,0.16);
+    --shadow-sm: 0 2px 8px rgba(15,29,46,0.08);
+    --shadow-md: 0 4px 16px rgba(15,29,46,0.12);
+    --shadow-lg: 0 8px 32px rgba(15,29,46,0.16);
 }
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }

@@ -78,7 +78,6 @@
             </div>
         </aside>
 
-        <!-- Colonne droite — formulaire principal -->
         <section class="form-col">
 
             <!-- Onglets Inscription / Connexion — switchAuth() dans connexion.js gère le basculement -->
@@ -302,27 +301,28 @@
                 </div>
             </div>
 
-        </section>
-    </main>
+        </section><!-- /.form-col -->
 
-    <!-- Section résumé des règles — affichée en bas de page, liée depuis le checkbox -->
-    <section class="terms-section" id="rules">
-        <h3>Règles d'utilisation et Confidentialité</h3>
-        <p style="text-align: center; margin-bottom: 1.5rem;">
-            En t'inscrivant, tu acceptes nos règles d'utilisation et notre politique de confidentialité.
-        </p>
-        <div style="text-align: center;">
-            <a href="politique.html" target="_blank" style="display: inline-block; padding: 0.8rem 2rem; background: var(--lavande); color: white; border-radius: var(--radius-full); font-weight: 600; text-decoration: none; transition: all 0.2s;">
-                Lire les politiques complètes
-            </a>
-        </div>
-        <ul style="margin-top: 2rem;">
-            <li><strong>Anonymat dans le chat :</strong> Seul ton pseudo et avatar sont visibles.</li>
-            <li><strong>Données protégées :</strong> Ton nom, email et contact d'urgence restent strictement privés.</li>
-            <li><strong>Utilisation responsable :</strong> Aucun contenu violent, harcelant ou illégal.</li>
-            <li><strong>Contact d'urgence :</strong> Utilisé uniquement si ta sécurité est en danger.</li>
-        </ul>
-    </section>
+        <!-- Règles — dans main, décalées via .terms-section dans le CSS -->
+        <section class="terms-section" id="rules">
+            <h3>Règles d'utilisation et Confidentialité</h3>
+            <p style="text-align: center; margin-bottom: 1.5rem;">
+                En t'inscrivant, tu acceptes nos règles d'utilisation et notre politique de confidentialité.
+            </p>
+            <div style="text-align: center;">
+                <a href="politique.html" target="_blank" style="display: inline-block; padding: 0.8rem 2rem; background: var(--lavande); color: white; border-radius: var(--radius-full); font-weight: 600; text-decoration: none; transition: all 0.2s;">
+                    Lire les politiques complètes
+                </a>
+            </div>
+            <ul style="margin-top: 2rem;">
+                <li><strong>Anonymat dans le chat :</strong> Seul ton pseudo et avatar sont visibles.</li>
+                <li><strong>Données protégées :</strong> Ton nom, email et contact d'urgence restent strictement privés.</li>
+                <li><strong>Utilisation responsable :</strong> Aucun contenu violent, harcelant ou illégal.</li>
+                <li><strong>Contact d'urgence :</strong> Utilisé uniquement si ta sécurité est en danger.</li>
+            </ul>
+        </section>
+
+    </main>
 
     <!-- security.js chargé en premier pour que ses utilitaires soient disponibles dans connexion.js -->
     <script src="js/security.js"></script>
