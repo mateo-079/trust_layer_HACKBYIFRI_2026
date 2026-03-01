@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS users (
   emergency_name   VARCHAR(100)     DEFAULT NULL               COMMENT 'Nom du contact d\'urgence',
   emergency_phone  VARCHAR(30)      DEFAULT NULL               COMMENT 'Téléphone du contact d\'urgence',
   is_banned        TINYINT(1)       NOT NULL DEFAULT 0         COMMENT '0 = actif, 1 = banni par la modération',
+  is_admin         TINYINT(1)       NOT NULL DEFAULT 0         COMMENT '0 = utilisateur, 1 = administrateur',
   created_at       TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at       TIMESTAMP        DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
 
@@ -165,7 +166,7 @@ CREATE TABLE IF NOT EXISTS reports (
   reporter_id  BIGINT UNSIGNED  NOT NULL  COMMENT 'Utilisateur qui signale',
   message_id   BIGINT UNSIGNED  NOT NULL  COMMENT 'Message signalé',
   reason       VARCHAR(500)     DEFAULT NULL,
-  status       ENUM('pending', 'reviewed', 'dismissed') NOT NULL DEFAULT 'pending',
+  status       ENUM('pending', 'resolved', 'rejected') NOT NULL DEFAULT 'pending',
   created_at   TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (id),
